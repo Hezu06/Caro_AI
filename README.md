@@ -1,86 +1,113 @@
-# BÀI TẬP LỚN TRÍ TUỆ NHÂN TẠO - CARO AI
+# Caro AI: MiniMax and Alpha-Beta
 
-Dự án xây dựng tác nhân chơi cờ Caro trên bàn cờ $9 \times 9$ sử dụng hai thuật toán đối kháng:
+A runnable Python foundation based on the supplied directory diagram. This is a new
+implementation, not a patch against an existing repository. Requires Python 3.10+;
+no third-party packages are required.
 
-1. **MiniMax kết hợp cắt tỉa Alpha-Beta**.
-2. **Monte Carlo Tree Search (MCTS) kết hợp chỉ số UCT**.
-3. **Thực nghiệm, khảo sát tham số & vẽ biểu đồ**: Khảo sát tham số khám phá $c \in \{0.5, 1.0, 1.4, 2.0\}$ và số iteration $\in \{100, 300, 500\}$.
-4. **Giao diện trực quan (UI)**: Hỗ trợ Người đấu Máy, Máy đấu Máy, thay đổi tham số trực tiếp và hiển thị nhật ký suy luận.
+Implemented: board rules, engine, agent interface/statistics, shared evaluator and
+candidate policy, separate MiniMax and Alpha-Beta search, random/human adapters,
+CLI, comparison script and tests. MCTS, heuristic MCTS, CustomTkinter GUI and
+plotting are future modules; the interfaces below support adding them.
 
----
+## Run
 
-## 1. Thiết lập môi trường chung
+From the extracted `Caro_AI` folder:
 
-Dự án sử dụng công cụ **`uv`** để tự động khóa phiên bản Python **3.11.9** và đồng bộ chính xác từng thư viện qua file `uv.lock`.
-
-### Cách 1: Sử dụng `uv` (Khuyên dùng)
-
-#### 🔹 Bước 1: Cài đặt `uv` (Nếu máy bạn chưa có)
-
-Mở Terminal / PowerShell và chạy **1 lệnh duy nhất** tương ứng với hệ điều hành:
-
-- **Trên Windows (PowerShell):**
-
-    ```powershell
-    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-    ```
-
-    _(Hoặc nếu máy đã có winget: `winget install --id=astral-sh.uv -e`)_
-
-- **Trên macOS / Linux:**
-
-    ```bash
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    ```
-
-- **Hoặc cài nhanh qua pip (nếu máy đã có sẵn Python bất kỳ):**
-    ```bash
-    pip install uv
-    ```
-
-> Sau khi cài đặt `uv`, hãy tắt và mở lại Terminal / PowerShell để máy nhận diện lệnh `uv`.
-
-#### 🔹 Bước 2: Đồng bộ môi trường
-
-Tại thư mục gốc `Caro_AI`, chạy lệnh:
-
-```bash
-uv sync
+```sh
+python main.py
+python main.py --x minimax --o alpha-beta --depth 2 --max-candidates 12 --radius 2
+python main.py --x human --o alpha-beta --log decisions.log
+python -m unittest discover -s tests -v
+python -m experiments.compare_search --depth 2 --repeats 3
 ```
 
-`uv` sẽ **tự động tải bản Python 3.11.9 chính thức về** (nếu máy bạn chưa có), tạo môi trường ảo `.venv` và cài đặt đầy đủ tất cả thư viện theo file `uv.lock`.
+Human input uses `row column`, e.g. `4 4`. Coordinates are zero-based.
+`X=1`, `O=-1`, `EMPTY=0`. Five or more stones in any of four directions wins,
+even when blocked at both ends. A full board without a winner is a draw.
 
-#### 🔹 Bước 3: Chạy ứng dụng
+## Use the agents
 
-- Chạy trực tiếp qua uv:
-    ```bash
-    uv run python main.py
-    ```
-- Hoặc kích hoạt môi trường ảo như bình thường:
-    - Windows: `.venv\Scripts\activate` rồi gõ `python main.py`
-    - macOS/Linux: `source .venv/bin/activate` rồi gõ `python main.py`
+```python
+from src.core import GameEngine
+from src.agents import MinimaxAgent, AlphaBetaAgent
 
----
+game = GameEngine()
+agents = {1: MinimaxAgent(depth=2), -1: AlphaBetaAgent(depth=2)}
+while not game.is_over:
+    agent = agents[game.current_player]
+    record = game.step(agent)
+    print(record, agent.last_stats.to_dict())
+```
 
-### Cách 2: Phương án dự phòng (Sử dụng `pip` & `venv`)
+For one decision, call `agent.get_move(board, player)`; it returns `(row, col)`
+or `None` for a terminal position, without altering the supplied board.
+`player` explicitly identifies whose turn it is. `GameEngine` tracks turns;
+`Board` deliberately does not infer them from stone counts, so controlled test
+positions are possible. If initializing from a custom board, supply the correct
+`current_player` to the engine. The board validates dimensions, cell values and
+contradictory winners, but does not validate historical reachability.
 
-Nếu vì lý do gì bạn không cài được `uv`, bạn có thể cài thủ công bằng Python:
+## Search configuration
 
-1. Đảm bảo máy tính đã cài đặt **Python 3.11.x**.
-2. Mở terminal tại thư mục dự án và chạy:
-    - **Windows:**
-        ```powershell
-        python -m venv .venv
-        .venv\Scripts\activate
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        ```
-    - **macOS / Linux:**
-        ```bash
-        python3 -m venv .venv
-        source .venv/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        ```
+Both classes accept the same arguments:
 
----
+```python
+agent = AlphaBetaAgent(
+    depth=2,
+    max_candidates=12,
+    candidate_radius=2,
+)
+```
+
+- `depth`: maximum number of individual moves (plies), including the root move.
+  At depth 2, search includes the AI move and one opponent reply.
+- `max_candidates`: strict cap per expanded position. `None` disables it.
+- `candidate_radius`: Chebyshev distance from existing stones. `None` disables
+  the distance filter. On an empty board all cells are eligible before ranking.
+- `evaluator`: callable `(board, root_player) -> finite float`, default `evaluate`.
+  A replacement must preserve terminal utility (win positive, loss negative,
+  draw zero), dominate heuristic scores with terminal scores, and be deterministic.
+- `logger`: optional Python logger. Each decision emits an INFO record.
+
+CLI values `--max-candidates 0` and `--radius 0` map to `None`. Set **both** to
+zero to search every legal move; this becomes expensive on a 9×9 board.
+
+Candidate order is identical in both agents: immediate wins, immediate blocks,
+number of adjacent stones, distance to center, then row and column. The same
+policy applies at MAX and MIN nodes, using the side moving at that node.
+The strict cap can exclude important alternatives, including some blocks when
+multiple threats exist. Filtering changes the tree and can change the decision;
+Alpha-Beta preserves the MiniMax result on the same filtered tree.
+
+## Search behavior
+
+The root player is MAX; the opponent is MIN. Every score is measured from the
+root player's perspective. MiniMax explores every candidate branch to the depth
+limit or a terminal position. Alpha-Beta maintains alpha (MAX's lower bound) and
+beta (MIN's upper bound), stopping when alpha >= beta. The algorithms use separate
+recursive implementations; common configuration and instrumentation are reused
+through inheritance. Equal scores keep the first move in the deterministic order.
+
+The evaluator scores unblocked five-cell windows, including gapped threats;
+contiguous runs with open ends; and a small center bonus. Terminal scores are
++1,000,000 / -1,000,000 / 0; nonterminal scores are clamped to half that magnitude.
+There is no time cutoff, iterative deepening, cache or transposition table.
+A larger requested depth is always searched unless a terminal state is reached.
+
+## Statistics and comparisons
+
+`last_stats` contains the chosen move, configured depth, maximum depth actually
+reached, elapsed seconds, visited nodes, leaf nodes, cutoff events and root score.
+Timing includes candidate generation, copying and evaluation, excludes writing
+the final log record. Node counts include the root and each recursive search call;
+they exclude tactical checks during candidate ordering. Each call resets stats.
+`cutoffs` counts events with at least one unsearched sibling, not skipped subtrees'
+unknown node counts. Random/human agents report zero search nodes and depth.
+
+The comparison script checks identical moves and scores and no increase in
+Alpha-Beta's node count. It alternates execution order and writes all measurements
+to CSV. Included CSV files are measured results from this execution environment,
+not estimates. See [docs/RESULTS.md](docs/RESULTS.md).
+
+For integration contracts and adding MCTS or a GUI adapter, see
+[docs/INTERFACES.md](docs/INTERFACES.md).
