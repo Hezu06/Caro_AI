@@ -1058,6 +1058,7 @@
               <div class="pill-row" id="algoPills">
                 <button class="mini-pill active" data-algo="alpha-beta" type="button">Alpha-Beta</button>
                 <button class="mini-pill" data-algo="minimax" type="button">MiniMax</button>
+                <button class="mini-pill" data-algo="mcts" type="button">MCTS</button>
                 <button class="mini-pill" data-algo="random" type="button">Random</button>
               </div>
             </div>
@@ -1080,6 +1081,7 @@
               <div class="pill-row" id="botXAlgoPills">
                 <button class="mini-pill active-blue" data-algo="alpha-beta" type="button">Alpha-Beta</button>
                 <button class="mini-pill" data-algo="minimax" type="button">MiniMax</button>
+                <button class="mini-pill" data-algo="mcts" type="button">MCTS</button>
                 <button class="mini-pill" data-algo="random" type="button">Random</button>
               </div>
             </div>
@@ -1099,6 +1101,7 @@
               <div class="pill-row" id="botOAlgoPills">
                 <button class="mini-pill active-green" data-algo="alpha-beta" type="button">Alpha-Beta</button>
                 <button class="mini-pill" data-algo="minimax" type="button">MiniMax</button>
+                <button class="mini-pill" data-algo="mcts" type="button">MCTS</button>
                 <button class="mini-pill" data-algo="random" type="button">Random</button>
               </div>
             </div>
@@ -2315,6 +2318,7 @@
       function formatAlgo(algo, depth) {
         if (algo === 'alpha-beta') return `Alpha-Beta (d=${depth})`;
         if (algo === 'minimax') return `MiniMax (d=${depth})`;
+        if (algo === 'mcts') return 'MCTS (UCT)';
         return 'RandomBot';
       }
       if (state.mode === 'ai-ai') {
@@ -2389,6 +2393,9 @@
       els.aiAiSettings.classList.toggle('hidden', state.mode !== 'ai-ai');
       els.aiPauseBtn.classList.toggle('hidden', state.mode !== 'ai-ai');
       els.aiStepBtn.classList.toggle('hidden', state.mode !== 'ai-ai');
+      document.getElementById('depthPills').parentElement.classList.toggle('hidden', state.algorithm === 'mcts');
+      document.getElementById('botXDepthPills').parentElement.classList.toggle('hidden', state.botXAlgo === 'mcts');
+      document.getElementById('botODepthPills').parentElement.classList.toggle('hidden', state.botOAlgo === 'mcts');
 
       // Pause/Resume button text
       if (state.mode === 'ai-ai') {
@@ -2534,21 +2541,15 @@
       state.aiTimer = setTimeout(async () => {
         if (mySession !== state.sessionId || state.gameOver) return;
 
-        let diff = state.difficulty;
-        if (state.mode === 'ai-ai') {
-          diff = state.turn === X ? state.botXDiff : state.botODiff;
-        }
+        const player = state.turn;
+        const isBotMatch = state.mode === 'ai-ai';
+        const algo = isBotMatch ? (player === X ? state.botXAlgo : state.botOAlgo) : state.algorithm;
+        const depth = isBotMatch ? (player === X ? state.botXDepth : state.botODepth) : state.depth;
 
         let move = null;
         try {
-          const pyPlayer = (state.turn === X) ? 1 : -1;
+          const pyPlayer = (player === X) ? 1 : -1;
           const pyBoard = state.board.map(row => row.map(cell => (cell === O ? -1 : cell)));
-          let algo = state.algorithm || 'alpha-beta';
-          let depth = state.depth || 2;
-          if (state.mode === 'ai-ai') {
-            algo = (state.turn === X) ? state.botXAlgo : state.botOAlgo;
-            depth = (state.turn === X) ? state.botXDepth : state.botODepth;
-          }
           const res = await fetch('/api/move', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2557,18 +2558,29 @@
               player: pyPlayer,
               algorithm: algo,
               depth: depth,
-              max_candidates: 20
+              max_candidates: 12
             })
           });
           const data = await res.json();
+          if (mySession !== state.sessionId) return;
+          if (algo === 'mcts' && (
+            !res.ok || !data.success || !data.move || data.stats?.algorithm !== 'MCTSAgent'
+          )) {
+            throw new Error(data.error || 'MCTS returned no move');
+          }
           if (data.success && data.move) {
             move = { r: data.move[0], c: data.move[1] };
-            if (data.stats) updateStatsUI(data.stats, state.turn);
+            if (data.stats) updateStatsUI(data.stats, player);
           }
         } catch (err) {
+          if (mySession !== state.sessionId) return;
+          if (algo === 'mcts') {
+            console.warn('MCTS move failed', err);
+            setStatus('MCTS could not play. Check the Python server, then restart the match.');
+            return;
+          }
           console.warn('Python server not responding, using fallback JS AI', err);
-          let diff = 'medium';
-          move = CaroAI.chooseMove(state.board, state.turn, diff);
+          move = CaroAI.chooseMove(state.board, player, 'medium');
         }
 
         if (mySession !== state.sessionId || !move) return;
@@ -2738,6 +2750,8 @@
     if (algoPills) {
       wirePillGroup(algoPills, btn => {
         state.algorithm = btn.dataset.algo;
+        renderAvatarsAndCards();
+        updateControls();
       }, 'active');
     }
 
@@ -2753,6 +2767,7 @@
       wirePillGroup(botXAlgoPills, btn => {
         state.botXAlgo = btn.dataset.algo;
         renderAvatarsAndCards();
+        updateControls();
       }, 'active-blue');
     }
 
@@ -2761,6 +2776,7 @@
       wirePillGroup(botOAlgoPills, btn => {
         state.botOAlgo = btn.dataset.algo;
         renderAvatarsAndCards();
+        updateControls();
       }, 'active-green');
     }
 
