@@ -1,0 +1,2837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CARO — Hand-Drawn 9×9 Vietnamese Caro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FAF8EB;
+      --ink: #111314;
+      --blue: #00B2EE;
+      --green: #9DC654;
+      --font-display: 'Fredoka', 'Chalkboard SE', 'Comic Sans MS', ui-rounded, sans-serif;
+      --font-hand: 'Patrick Hand', 'Chalkboard SE', 'Comic Sans MS', cursive, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background-color: var(--cream);
+      color: var(--ink);
+      font-family: var(--font-hand);
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 16px 28px;
+      position: relative;
+    }
+
+    /* Subtle organic paper grain dots via tiny SVG pattern */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.035;
+      background-image: radial-gradient(var(--ink) 1px, transparent 1px);
+      background-size: 24px 24px;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1120px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ================= HEADER ================= */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 4px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-title-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3.2vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      margin: 0;
+      position: relative;
+    }
+
+    .brand-sub {
+      font-size: 1.05rem;
+      line-height: 1.1;
+      border-left: 2.5px solid var(--ink);
+      padding-left: 10px;
+      opacity: 0.9;
+    }
+
+    .brand-sub strong {
+      font-family: var(--font-display);
+      font-weight: 600;
+    }
+
+    .top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Sketchy hand-drawn segmented pill */
+    .mode-switch {
+      display: inline-flex;
+      background: var(--cream);
+      border: 2.8px solid var(--ink);
+      border-radius: 22px 18px 24px 19px / 19px 23px 18px 22px;
+      padding: 3px;
+      box-shadow: 3px 3px 0 var(--ink);
+      gap: 4px;
+    }
+
+    .mode-btn {
+      font-family: var(--font-display);
+      font-size: 0.96rem;
+      font-weight: 600;
+      padding: 7px 14px;
+      border: 2px solid transparent;
+      border-radius: 17px 14px 18px 15px;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      transition: transform 0.12s ease, background-color 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mode-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .mode-btn.active {
+      background: var(--blue);
+      color: var(--cream);
+      border-color: var(--ink);
+    }
+
+    .mode-btn.active.ai-ai {
+      background: var(--green);
+      color: var(--ink);
+    }
+
+    /* Hand-drawn icon buttons */
+    .sketch-btn {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      background: var(--cream);
+      color: var(--ink);
+      border: 2.8px solid var(--ink);
+      border-radius: 17px 21px 18px 22px / 21px 17px 22px 18px;
+      padding: 8px 14px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+      user-select: none;
+    }
+
+    .sketch-btn:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+
+    .sketch-btn:active:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .sketch-btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .sketch-btn.accent-blue {
+      background: var(--blue);
+      color: var(--cream);
+    }
+
+    .sketch-btn.accent-green {
+      background: var(--green);
+      color: var(--ink);
+    }
+
+    .sketch-btn.icon-only {
+      padding: 8px 11px;
+    }
+
+    /* ================= MAIN LAYOUT ================= */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 270px minmax(300px, 530px) 250px;
+      gap: 20px;
+      align-items: start;
+      justify-content: center;
+    }
+
+    /* ================= PLAYER CARDS ================= */
+    .side-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .doodle-card {
+      background: var(--cream);
+      border: 2.8px solid var(--ink);
+      border-radius: 22px 19px 24px 20px / 20px 24px 19px 22px;
+      padding: 14px 14px 12px;
+      box-shadow: 4px 4px 0 var(--ink);
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .player-card.active-turn {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+
+    .player-card.team-x.active-turn::after {
+      content: "YOUR MOVE";
+      position: absolute;
+      top: -12px;
+      right: 14px;
+      background: var(--blue);
+      color: var(--cream);
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 2px 9px;
+      border: 2.2px solid var(--ink);
+      border-radius: 12px 10px 13px 11px;
+      animation: popWiggle 1.4s ease-in-out infinite;
+    }
+
+    .player-card.team-o.active-turn::after {
+      content: "YOUR MOVE";
+      position: absolute;
+      top: -12px;
+      right: 14px;
+      background: var(--green);
+      color: var(--ink);
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 2px 9px;
+      border: 2.2px solid var(--ink);
+      border-radius: 12px 10px 13px 11px;
+      animation: popWiggle 1.4s ease-in-out infinite;
+    }
+
+    .player-card.is-ai.active-turn::after {
+      content: "THINKING...";
+    }
+
+    .player-card.is-winner::after {
+      content: "WINNER!";
+      background: var(--ink) !important;
+      color: var(--cream) !important;
+      animation: bounceWin 0.6s ease infinite alternate;
+    }
+
+    @keyframes popWiggle {
+      0%, 100% { transform: rotate(-1.5deg) scale(1); }
+      50% { transform: rotate(1.5deg) scale(1.04); }
+    }
+
+    @keyframes bounceWin {
+      from { transform: translateY(0) rotate(-2deg); }
+      to { transform: translateY(-4px) rotate(2deg); }
+    }
+
+    .player-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .player-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .piece-pill {
+      width: 28px;
+      height: 28px;
+      border-radius: 50% 46% 52% 48%;
+      border: 2.4px solid var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cream);
+      flex-shrink: 0;
+    }
+
+    .score-chip {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border: 2.2px solid var(--ink);
+      border-radius: 14px;
+      background: var(--cream);
+    }
+
+    .team-x .score-chip {
+      background: var(--blue);
+      color: var(--cream);
+    }
+
+    .team-o .score-chip {
+      background: var(--green);
+      color: var(--ink);
+    }
+
+    .avatar-stage {
+      height: 112px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      border-radius: 14px;
+      transition: transform 0.15s ease;
+    }
+
+    .avatar-stage:hover {
+      transform: scale(1.03);
+    }
+
+    .avatar-stage svg {
+      width: 100%;
+      height: 100%;
+      max-width: 155px;
+      overflow: visible;
+    }
+
+    .player-card.active-turn .avatar-stage svg {
+      animation: gentleBob 2.2s ease-in-out infinite;
+    }
+
+    .player-card.is-winner .avatar-stage svg {
+      animation: happyJump 0.55s ease-in-out infinite alternate;
+    }
+
+    @keyframes gentleBob {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(-1.2deg); }
+    }
+
+    @keyframes happyJump {
+      from { transform: translateY(0) rotate(-3deg) scale(1); }
+      to { transform: translateY(-8px) rotate(3deg) scale(1.05); }
+    }
+
+    .avatar-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+      gap: 6px;
+    }
+
+    .char-name {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .char-cycle-btn {
+      font-family: var(--font-hand);
+      font-size: 0.9rem;
+      background: transparent;
+      border: 2px dashed var(--ink);
+      border-radius: 12px;
+      padding: 2px 8px;
+      cursor: pointer;
+      color: var(--ink);
+      transition: background 0.15s ease;
+    }
+
+    .char-cycle-btn:hover {
+      background: rgba(17, 19, 20, 0.07);
+    }
+
+    /* ================= BOARD AREA ================= */
+    .board-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-ribbon {
+      width: 100%;
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border: 2.8px solid var(--ink);
+      border-radius: 20px 24px 19px 23px / 22px 18px 24px 20px;
+      background: var(--cream);
+      box-shadow: 3px 3px 0 var(--ink);
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-align: center;
+      transition: background-color 0.2s ease;
+    }
+
+    .status-ribbon.win-x {
+      background: var(--blue);
+      color: var(--cream);
+    }
+
+    .status-ribbon.win-o {
+      background: var(--green);
+      color: var(--ink);
+    }
+
+    .status-ribbon.blocked-note {
+      animation: shakeGentle 0.38s ease;
+    }
+
+    @keyframes shakeGentle {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px) rotate(-0.8deg); }
+      75% { transform: translateX(5px) rotate(0.8deg); }
+    }
+
+    .board-shell {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      aspect-ratio: 1 / 1;
+      padding: 26px 22px 24px 26px;
+      background: var(--cream);
+    }
+
+    /* Hand-drawn outer border & signature curly loop SVG */
+    .board-frame-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .board-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .board-grid-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .board-cells {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
+      width: 100%;
+      height: 100%;
+    }
+
+    .cell {
+      position: relative;
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+    }
+
+    .cell.occupied,
+    .cell.locked {
+      cursor: default;
+    }
+
+    /* Ghost preview on hover */
+    .cell .ghost-piece {
+      position: absolute;
+      inset: 14%;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: opacity 0.12s ease, transform 0.12s ease;
+      pointer-events: none;
+    }
+
+    .cell:not(.occupied):not(.locked):hover .ghost-piece,
+    .cell:not(.occupied):not(.locked):focus-visible .ghost-piece {
+      opacity: 0.36;
+      transform: scale(1);
+    }
+
+    .cell .piece-svg {
+      width: 78%;
+      height: 78%;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Animated marker stroke drawing */
+    .draw-stroke {
+      stroke-dasharray: 160;
+      stroke-dashoffset: 160;
+      animation: sketchDraw 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .draw-stroke.delay {
+      animation-delay: 0.09s;
+    }
+
+    @keyframes sketchDraw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    /* Last move hand-drawn highlight ring */
+    .last-move-ring {
+      position: absolute;
+      inset: 4%;
+      width: 92%;
+      height: 92%;
+      pointer-events: none;
+      z-index: 1;
+      animation: lastPop 0.3s cubic-bezier(0.22, 1.4, 0.36, 1);
+    }
+
+    @keyframes lastPop {
+      from { transform: scale(0.75); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* Winning stone subtle glow pulse */
+    .cell.win-cell .piece-svg {
+      animation: winStonePulse 0.9s ease-in-out infinite alternate;
+    }
+
+    @keyframes winStonePulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    /* Winning line overlay SVG */
+    .win-line-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 4;
+      overflow: visible;
+    }
+
+    .win-strike-path {
+      stroke-dasharray: 1200;
+      stroke-dashoffset: 1200;
+      animation: drawWinLine 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes drawWinLine {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* Coordinates around the 9x9 board */
+    .coord-top {
+      position: absolute;
+      top: 5px;
+      left: 26px;
+      right: 22px;
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .coord-left {
+      position: absolute;
+      top: 26px;
+      bottom: 24px;
+      left: 6px;
+      width: 18px;
+      display: grid;
+      grid-template-rows: repeat(9, 1fr);
+      align-items: center;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Action Bar below board */
+    .action-bar {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* ================= RIGHT PANEL (SETTINGS & RULES) ================= */
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .setting-group {
+      margin-bottom: 12px;
+    }
+
+    .setting-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mini-pill {
+      flex: 1;
+      min-width: 56px;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 8px;
+      border: 2.3px solid var(--ink);
+      border-radius: 13px 11px 14px 12px;
+      background: var(--cream);
+      color: var(--ink);
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.1s ease, background-color 0.15s ease;
+    }
+
+    .mini-pill:hover {
+      transform: translateY(-1px);
+    }
+
+    .mini-pill.active {
+      background: var(--ink);
+      color: var(--cream);
+    }
+
+    .mini-pill.active-blue {
+      background: var(--blue);
+      color: var(--cream);
+    }
+
+    .mini-pill.active-green {
+      background: var(--green);
+      color: var(--ink);
+    }
+
+    .rules-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 0.96rem;
+      line-height: 1.38;
+    }
+
+    .rules-list li {
+      margin-bottom: 6px;
+    }
+
+    .rules-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .rule-diagram {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border: 2px dashed var(--ink);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+
+    .rule-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .mini-seq {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .seq-x { color: var(--blue); }
+    .seq-o { color: var(--green); }
+    .seq-tag {
+      font-family: var(--font-display);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 10px;
+      border: 1.8px solid var(--ink);
+    }
+    .seq-tag.yes { background: var(--green); }
+    .seq-tag.no { background: var(--cream); text-decoration: line-through; }
+
+    .move-counter {
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      margin-top: 10px;
+      border-top: 2px dashed var(--ink);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ================= RESPONSIVE ================= */
+    @media (max-width: 1040px) {
+      .main-grid {
+        grid-template-columns: minmax(290px, 530px);
+        justify-items: center;
+      }
+
+      .side-col.players-col {
+        width: 100%;
+        max-width: 530px;
+        flex-direction: row;
+        order: 1;
+      }
+
+      .side-col.players-col .doodle-card {
+        flex: 1;
+      }
+
+      .board-col {
+        width: 100%;
+        order: 2;
+      }
+
+      .side-col.settings-col {
+        width: 100%;
+        max-width: 530px;
+        order: 3;
+      }
+
+      .avatar-stage {
+        height: 86px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 10px 10px 24px;
+      }
+
+      .top-bar {
+        justify-content: center;
+      }
+
+      .brand-sub {
+        display: none;
+      }
+
+      .side-col.players-col {
+        gap: 10px;
+      }
+
+      .doodle-card {
+        padding: 10px;
+      }
+
+      .avatar-stage {
+        height: 70px;
+      }
+
+      .char-cycle-btn {
+        font-size: 0.8rem;
+        padding: 1px 6px;
+      }
+
+      .board-shell {
+        padding: 20px 16px 18px 20px;
+      }
+
+      .coord-top {
+        top: 2px;
+        left: 20px;
+        right: 16px;
+        font-size: 0.74rem;
+      }
+
+      .coord-left {
+        top: 20px;
+        bottom: 18px;
+        left: 3px;
+        font-size: 0.74rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- TOP BAR -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-title-wrap">
+          <!-- Little blue doodle sparks -->
+          <svg width="26" height="30" viewBox="0 0 26 30" fill="none" aria-hidden="true">
+            <path d="M12 4L14 11" stroke="#00B2EE" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M4 9L10 13" stroke="#9DC654" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M5 20L11 18" stroke="#00B2EE" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M19 6L17 12" stroke="#111314" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <h1 class="brand-title">CARO</h1>
+            <svg width="88" height="10" viewBox="0 0 88 10" fill="none" style="display:block;margin-top:-2px;" aria-hidden="true">
+              <path d="M3 6C22 2 48 9 68 4C76 2 81 8 85 5" stroke="#111314" stroke-width="2.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="brand-sub">
+          <strong>9×9</strong> Vietnamese Rule<br />
+          Sketchbook Edition
+        </div>
+      </div>
+
+      <div class="top-controls">
+        <div class="mode-switch" role="tablist" aria-label="Game Mode">
+          <button id="modeHumanAi" class="mode-btn active" role="tab" aria-selected="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M17 9l4 4m0-4l-4 4"/></svg>
+            Human vs AI
+          </button>
+          <button id="modeAiAi" class="mode-btn ai-ai" role="tab" aria-selected="false">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M12 7V3"/><circle cx="9" cy="13" r="1.2" fill="currentColor"/><circle cx="15" cy="13" r="1.2" fill="currentColor"/></svg>
+            AI vs AI
+          </button>
+        </div>
+
+        <button id="muteBtn" class="sketch-btn icon-only" title="Toggle marker sound effects" aria-label="Toggle Sound">
+          <span id="muteIcon"></span>
+          <span id="muteText">Sound On</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN 3-COLUMN WORKSPACE -->
+    <main class="main-grid">
+      <!-- LEFT: PLAYER AVATAR CARDS -->
+      <section class="side-col players-col" aria-label="Players">
+        <!-- Player X (Blue) -->
+        <div id="cardX" class="doodle-card player-card team-x active-turn">
+          <div class="player-top">
+            <div class="player-badge">
+              <span class="piece-pill" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 5C9 9.5 14.5 15 19 19" stroke="#00B2EE" stroke-width="3.6" stroke-linecap="round"/>
+                  <path d="M19 5.5C14.5 10 9.5 14.8 5 19.2" stroke="#00B2EE" stroke-width="3.6" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span id="roleLabelX">You (X)</span>
+            </div>
+            <span class="score-chip" id="scoreX">0</span>
+          </div>
+
+          <div class="avatar-stage" id="avatarStageX" title="Click to switch character"></div>
+
+          <div class="avatar-footer">
+            <span class="char-name" id="charNameX">Floatie Coder</span>
+            <button class="char-cycle-btn" id="cycleX" type="button">Swap doodle ↻</button>
+          </div>
+        </div>
+
+        <!-- Player O (Green) -->
+        <div id="cardO" class="doodle-card player-card team-o is-ai">
+          <div class="player-top">
+            <div class="player-badge">
+              <span class="piece-pill" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12.5 4.5C7 4.2 4 8.4 4.3 12.6C4.7 17.5 8.5 19.9 13 19.6C17.8 19.2 20.1 15.2 19.6 11C19.1 7 16 4.7 12.5 4.5Z" stroke="#9DC654" stroke-width="3.6" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span id="roleLabelO">Bot (O)</span>
+            </div>
+            <span class="score-chip" id="scoreO">0</span>
+          </div>
+
+          <div class="avatar-stage" id="avatarStageO" title="Click to switch character"></div>
+
+          <div class="avatar-footer">
+            <span class="char-name" id="charNameO">Happy Dragon</span>
+            <button class="char-cycle-btn" id="cycleO" type="button">Swap doodle ↻</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CENTER: 9x9 HAND-DRAWN BOARD -->
+      <section class="board-col" aria-label="Caro Board">
+        <div id="statusRibbon" class="status-ribbon" role="status" aria-live="polite">
+          Your turn! Sketch an X anywhere on the 9×9 grid.
+        </div>
+
+        <div class="board-shell">
+          <!-- Hand-drawn outer border & signature curly ground loop -->
+          <svg class="board-frame-svg" viewBox="0 0 520 520" fill="none" preserveAspectRatio="none" aria-hidden="true">
+            <!-- Outer organic ink frame -->
+            <path d="M22 25 C140 21, 370 27, 498 23 C503 160, 496 355, 500 495 C360 500, 155 493, 24 497 C19 360, 26 155, 22 25 Z"
+                  stroke="#111314" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="#FAF8EB"/>
+            <!-- Subtle offset ink shadow sketch lines -->
+            <path d="M30 502 C180 505, 360 500, 503 501 C506 365, 504 170, 505 32"
+                  stroke="#111314" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
+            <!-- Signature curly loop at bottom right (matching mermaid/centaur style) -->
+            <path d="M465 501 C496 502, 514 488, 507 476 C500 465, 485 478, 493 493 C500 507, 519 506, 526 494"
+                  stroke="#111314" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Playful blue squiggle top-left outside corner -->
+            <path d="M-2 15 C-11 8, -4 -2, 6 3 C14 7, 10 17, 1 13"
+                  stroke="#00B2EE" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Playful green sparks top-right outside corner -->
+            <path d="M510 12 L520 4" stroke="#9DC654" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M513 21 L525 19" stroke="#9DC654" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M500 7 L505 -3" stroke="#9DC654" stroke-width="2.8" stroke-linecap="round"/>
+          </svg>
+
+          <div class="coord-top" aria-hidden="true">
+            <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span>
+          </div>
+          <div class="coord-left" aria-hidden="true">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+          </div>
+
+          <div class="board-inner">
+            <!-- Wobbly hand-drawn 9x9 grid SVG injected by JS -->
+            <svg id="boardGridSvg" class="board-grid-svg" viewBox="0 0 450 450" fill="none" preserveAspectRatio="none" aria-hidden="true"></svg>
+
+            <!-- Clickable 9x9 cells -->
+            <div id="boardCells" class="board-cells" role="grid" aria-label="9 by 9 Caro board"></div>
+
+            <!-- Animated winning strike-through line & doodle sparks -->
+            <svg id="winLineSvg" class="win-line-svg" viewBox="0 0 450 450" fill="none" aria-hidden="true"></svg>
+          </div>
+        </div>
+
+        <!-- ACTION CONTROLS -->
+        <div class="action-bar">
+          <button id="undoBtn" class="sketch-btn" type="button" disabled>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+            Undo
+          </button>
+
+          <button id="aiPauseBtn" class="sketch-btn accent-green hidden" type="button">
+            Pause Bots
+          </button>
+
+          <button id="aiStepBtn" class="sketch-btn hidden" type="button">
+            Step 1 Move
+          </button>
+
+          <button id="restartBtn" class="sketch-btn accent-blue" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+            Restart
+          </button>
+        </div>
+      </section>
+
+      <!-- RIGHT: SETTINGS & VIETNAMESE RULE GUIDE -->
+      <aside class="side-col settings-col">
+        <!-- Settings Card -->
+        <div class="doodle-card">
+          <h2 class="panel-title">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#111314" stroke-width="2.6" stroke-linecap="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.8" fill="#00B2EE"/><circle cx="15" cy="17" r="2.8" fill="#9DC654"/></svg>
+            Match Settings
+          </h2>
+
+          <!-- Human vs AI specific controls -->
+          <div id="humanSettings">
+            <div class="setting-group">
+              <span class="setting-label">Play As</span>
+              <div class="pill-row">
+                <button id="playAsX" class="mini-pill active-blue" type="button">X (1st)</button>
+                <button id="playAsO" class="mini-pill" type="button">O (2nd)</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <span class="setting-label">AI Algorithm</span>
+              <div class="pill-row" id="algoPills">
+                <button class="mini-pill active" data-algo="alpha-beta" type="button">Alpha-Beta</button>
+                <button class="mini-pill" data-algo="minimax" type="button">MiniMax</button>
+                <button class="mini-pill" data-algo="random" type="button">Random</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <span class="setting-label">Search Depth (d)</span>
+              <div class="pill-row" id="depthPills">
+                <button class="mini-pill" data-depth="1" type="button">d = 1</button>
+                <button class="mini-pill active" data-depth="2" type="button">d = 2</button>
+                <button class="mini-pill" data-depth="3" type="button">d = 3</button>
+                <button class="mini-pill" data-depth="4" type="button">d = 4</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI vs AI specific controls -->
+          <div id="aiAiSettings" class="hidden">
+            <div class="setting-group">
+              <span class="setting-label">Bot X (Blue) Algorithm</span>
+              <div class="pill-row" id="botXAlgoPills">
+                <button class="mini-pill active-blue" data-algo="alpha-beta" type="button">Alpha-Beta</button>
+                <button class="mini-pill" data-algo="minimax" type="button">MiniMax</button>
+                <button class="mini-pill" data-algo="random" type="button">Random</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <span class="setting-label">Bot X Depth (d)</span>
+              <div class="pill-row" id="botXDepthPills">
+                <button class="mini-pill" data-depth="1" type="button">d = 1</button>
+                <button class="mini-pill active-blue" data-depth="2" type="button">d = 2</button>
+                <button class="mini-pill" data-depth="3" type="button">d = 3</button>
+                <button class="mini-pill" data-depth="4" type="button">d = 4</button>
+              </div>
+            </div>
+
+            <div class="setting-group" style="margin-top:10px;padding-top:8px;border-top:1.5px dashed var(--ink);">
+              <span class="setting-label">Bot O (Green) Algorithm</span>
+              <div class="pill-row" id="botOAlgoPills">
+                <button class="mini-pill active-green" data-algo="alpha-beta" type="button">Alpha-Beta</button>
+                <button class="mini-pill" data-algo="minimax" type="button">MiniMax</button>
+                <button class="mini-pill" data-algo="random" type="button">Random</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <span class="setting-label">Bot O Depth (d)</span>
+              <div class="pill-row" id="botODepthPills">
+                <button class="mini-pill" data-depth="1" type="button">d = 1</button>
+                <button class="mini-pill active-green" data-depth="2" type="button">d = 2</button>
+                <button class="mini-pill" data-depth="3" type="button">d = 3</button>
+                <button class="mini-pill" data-depth="4" type="button">d = 4</button>
+              </div>
+            </div>
+
+            <div class="setting-group" style="margin-top:10px;padding-top:8px;border-top:1.5px dashed var(--ink);">
+              <span class="setting-label">Watch Speed</span>
+              <div class="pill-row" id="speedPills">
+                <button class="mini-pill" data-speed="950" type="button">Slow</button>
+                <button class="mini-pill active" data-speed="450" type="button">Normal</button>
+                <button class="mini-pill" data-speed="120" type="button">Fast</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="move-counter">
+            <span>Moves sketched</span>
+            <strong id="moveCountText" style="font-family:var(--font-display);">0 / 81</strong>
+          </div>
+        </div>
+
+        <!-- AI Search Stats Card -->
+        <div class="doodle-card" id="statsCard">
+          <h2 class="panel-title">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#111314" stroke-width="2.6" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/><circle cx="12" cy="4" r="2" fill="#00B2EE"/></svg>
+            AI Search Stats
+          </h2>
+          <div id="aiStatsBox" style="font-size:0.92rem;line-height:1.5;">
+            <div><strong>Algorithm:</strong> <span id="statAlgo" style="color:var(--blue);font-weight:700;">AlphaBetaAgent</span></div>
+            <div><strong>Nodes visited:</strong> <span id="statNodes" style="font-family:var(--font-display);font-weight:700;">0</span></div>
+            <div><strong>Alpha-Beta cutoffs:</strong> <span id="statCutoffs" style="font-family:var(--font-display);font-weight:700;">0</span></div>
+            <div><strong>Thinking time:</strong> <span id="statTime" style="font-family:var(--font-display);font-weight:700;">0.000s</span></div>
+          </div>
+        </div>
+
+        <!-- Vietnamese Rule Card (School Spec) -->
+        <div class="doodle-card">
+          <h2 class="panel-title">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#111314" stroke-width="2.6" stroke-linecap="round"><path d="M12 3l2.6 5.5 6 .8-4.4 4.1 1.1 6L12 16.5 6.7 19.4l1.1-6L3.4 9.3l6-.8L12 3z" fill="#9DC654"/></svg>
+            Luật chơi cờ Caro 9×9
+          </h2>
+          <ul class="rules-list">
+            <li>Tạo ít nhất <strong>5 quân liên tiếp</strong> theo chiều ngang, dọc hoặc đường chéo.</li>
+            <li><strong>Không chặn 2 đầu!</strong> Cứ đủ từ 5 quân liên tiếp trở lên là chiến thắng.</li>
+            <li>Bàn cờ đầy mà không có người thắng là <strong>Hòa cờ</strong>.</li>
+          </ul>
+          <div class="rule-diagram" aria-label="Rule example">
+            <div class="rule-row">
+              <span class="mini-seq">
+                <span class="seq-o">O</span><span class="seq-x">X</span><span class="seq-x">X</span><span class="seq-x">X</span><span class="seq-x">X</span><span class="seq-x">X</span><span style="opacity:.4">·</span>
+              </span>
+              <span class="seq-tag yes">THẮNG!</span>
+            </div>
+            <div class="rule-row">
+              <span class="mini-seq">
+                <span class="seq-o">O</span><span class="seq-x">X</span><span class="seq-x">X</span><span class="seq-x">X</span><span class="seq-x">X</span><span class="seq-x">X</span><span class="seq-o">O</span>
+              </span>
+              <span class="seq-tag yes">THẮNG!</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+        function updateStatsUI(stats, player) {
+      if (!stats) return;
+      const elAlgo = document.getElementById('statAlgo');
+      const elNodes = document.getElementById('statNodes');
+      const elCutoffs = document.getElementById('statCutoffs');
+      const elTime = document.getElementById('statTime');
+
+      const sideName = player === X ? 'Bot X' : 'Bot O';
+      const sideColor = player === X ? 'var(--blue)' : 'var(--green)';
+
+      if (elAlgo) {
+        elAlgo.innerHTML = `<span style="color:${sideColor};">[${sideName}]</span> ${stats.algorithm || 'AlphaBetaAgent'}`;
+      }
+      if (elNodes) elNodes.textContent = (stats.nodes_visited || 0).toLocaleString();
+      if (elCutoffs) elCutoffs.textContent = (stats.cutoffs || 0).toLocaleString();
+      if (elTime) elTime.textContent = (stats.elapsed_seconds || 0).toFixed(4) + 's';
+    }
+
+    /* =========================================================================
+       1. HAND-DRAWN CHARACTER SVGs (Faithful to the Reference Art Style)
+       ========================================================================= */
+    const CHARACTERS = [
+      // Blue Team Defaults (0, 1, 2)
+      {
+        id: 'floatie',
+        name: 'Floatie Coder',
+        svg: `
+          <svg viewBox="0 0 180 128" fill="none">
+            <!-- Blue curly squiggle above -->
+            <path d="M74 28 C82 14, 102 15, 104 26 C105 33, 96 34, 96 28 C96 23, 105 23, 111 27" stroke="#00B2EE" stroke-width="3" stroke-linecap="round"/>
+            <!-- Unicorn horn -->
+            <path d="M51 34 L54 14 L64 33" fill="#FAF8EB" stroke="#00B2EE" stroke-width="2.6" stroke-linejoin="round"/>
+            <path d="M53 23 L60 22 M52 29 L62 28" stroke="#00B2EE" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- Blue unicorn floatie body -->
+            <path d="M36 42 C24 42, 24 62, 42 64 C47 65, 47 76, 42 84 C34 95, 36 112, 54 114 L144 114 C164 114, 168 88, 150 84 L62 84 C60 72, 68 58, 66 44 C64 34, 48 34, 36 42 Z" fill="#00B2EE"/>
+            <!-- Unicorn eyes -->
+            <path d="M41 47 C41 52, 46 52, 46 47 M51 47 C51 52, 56 52, 56 47" stroke="#FAF8EB" stroke-width="2.4" stroke-linecap="round"/>
+            <!-- Cream flowers on floatie -->
+            <path d="M62 103 C57 98, 65 93, 68 98 C72 93, 78 99, 73 104 C77 108, 70 113, 67 108 C63 113, 57 107, 62 103 Z" stroke="#FAF8EB" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M126 98 C122 93, 130 89, 133 94 C137 89, 143 96, 138 100 C141 105, 134 109, 131 104 C127 109, 121 103, 126 98 Z" stroke="#FAF8EB" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M92 86 C92 93, 99 93, 100 88 C101 93, 108 93, 108 86" stroke="#FAF8EB" stroke-width="2.4" stroke-linecap="round"/>
+            <!-- Person inside floatie -->
+            <path d="M68 84 L70 67 C71 60, 77 58, 82 60 L82 48 C82 37, 98 37, 99 49 L99 56 L109 53 L122 39" fill="#FAF8EB" stroke="#111314" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Raised arm holding cocktail -->
+            <path d="M107 64 L128 45 L128 34" stroke="#111314" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Cocktail glass -->
+            <path d="M119 19 L137 19 L128 31 Z" fill="#00B2EE"/>
+            <path d="M128 31 L128 41 M123 41 L133 41" stroke="#00B2EE" stroke-width="2.6" stroke-linecap="round"/>
+            <path d="M129 22 L133 10 L141 12" stroke="#00B2EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Hand & face -->
+            <circle cx="92" cy="48" r="1.5" fill="#111314"/>
+            <path d="M97 48 L101 53 L95 54" stroke="#111314" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M77 77 C83 71, 93 70, 96 76 C97 79, 91 81, 87 80" stroke="#111314" stroke-width="3" stroke-linecap="round"/>
+            <!-- Blue laptop -->
+            <path d="M97 84 L103 60 L132 60 L126 84 Z" fill="#FAF8EB" stroke="#00B2EE" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="115" cy="72" r="2.2" fill="#00B2EE"/>
+            <!-- Water wave under floatie -->
+            <path d="M40 116 C56 112, 72 120, 92 116 C112 112, 128 120, 152 115" stroke="#111314" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        `
+      },
+      {
+        id: 'ducks',
+        name: 'Duck Leader',
+        svg: `
+          <svg viewBox="0 0 180 128" fill="none">
+            <!-- Blue sparks over head -->
+            <path d="M100 16 L104 22 M111 12 L111 19 M121 15 L117 21" stroke="#00B2EE" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Blue curly squiggle behind arm -->
+            <path d="M136 62 C148 63, 155 54, 150 47 C146 42, 141 48, 147 54 C153 60, 163 54, 166 44" stroke="#00B2EE" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Walking joyful figure -->
+            <path d="M108 39 C104 33, 108 23, 117 23 C124 23, 127 31, 127 38 L142 30 L133 13 L143 9 L154 27 C157 34, 153 41, 145 45 L133 51 L131 74 L154 106 L165 104 C167 108, 160 113, 147 115 L122 86 L109 112 L118 117 C115 121, 102 120, 97 114 L110 76 L105 64 L88 87 L79 84 L99 48 C102 43, 105 40, 108 39 Z"
+                  fill="#FAF8EB" stroke="#111314" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Face -->
+            <path d="M111 32 L106 37 L112 38" stroke="#111314" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="117" cy="31" r="1.5" fill="#111314"/>
+            <path d="M114 38 C116 40, 119 40, 120 37" stroke="#111314" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- 3 Cute solid blue ducks -->
+            <g fill="#00B2EE">
+              <!-- Big duck -->
+              <path d="M62 104 C62 95, 70 94, 72 88 C73 82, 81 82, 82 88 L87 88 L83 92 C85 99, 82 110, 72 111 C64 111, 62 107, 62 104 Z"/>
+              <path d="M72 111 L70 119 M76 111 L79 119" stroke="#00B2EE" stroke-width="2.6" stroke-linecap="round"/>
+              <path d="M67 101 C71 104, 75 102, 77 98" stroke="#FAF8EB" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+              <!-- Mid duck -->
+              <path d="M40 105 C40 98, 47 97, 49 92 C50 87, 56 87, 57 92 L61 92 L58 95 C60 101, 56 109, 48 110 C42 110, 40 107, 40 105 Z"/>
+              <path d="M48 110 L46 117 M52 110 L54 117" stroke="#00B2EE" stroke-width="2.4" stroke-linecap="round"/>
+              <path d="M44 103 C48 105, 51 103, 53 100" stroke="#FAF8EB" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <!-- Small duck -->
+              <path d="M20 106 C20 100, 26 100, 28 96 C29 92, 34 92, 35 96 L38 96 L36 99 C37 104, 34 110, 27 110 C22 110, 20 108, 20 106 Z"/>
+              <path d="M27 110 L25 116 M31 110 L33 116" stroke="#00B2EE" stroke-width="2.2" stroke-linecap="round"/>
+            </g>
+          </svg>
+        `
+      },
+      {
+        id: 'hammock',
+        name: 'Hammock Chill',
+        svg: `
+          <svg viewBox="0 0 180 128" fill="none">
+            <!-- Left palm tree top -->
+            <path d="M46 38 L44 26 M44 26 C35 20, 26 22, 22 28 M44 26 C35 28, 29 35, 29 42 M44 26 C40 16, 36 11, 30 10 M44 26 C52 18, 60 18, 66 23 M44 26 C52 27, 58 31, 61 36"
+                  stroke="#111314" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Right palm tree -->
+            <path d="M148 114 L147 56 M147 56 C138 50, 130 53, 126 59 M147 56 C140 60, 136 66, 136 72 M147 56 C146 46, 142 40, 137 38 M147 56 C155 48, 162 49, 167 54 M147 56 C156 56, 163 60, 166 66"
+                  stroke="#111314" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Blue hammock body -->
+            <path d="M46 41 C38 84, 52 115, 86 115 C118 115, 134 94, 148 76 C126 84, 108 98, 82 98 C56 98, 52 68, 46 41 Z" fill="#00B2EE"/>
+            <!-- White stripes on right end of hammock -->
+            <path d="M127 87 L131 92 M133 83 L137 88 M139 79 L142 83" stroke="#FAF8EB" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- Person lounging -->
+            <path d="M51 74 C44 69, 44 60, 52 60 L66 66 C66 59, 76 58, 79 65 L89 60 C95 60, 96 71, 88 76 L85 90 L125 81 L130 68 L134 71 L131 92 C110 102, 86 108, 68 103 C53 98, 49 85, 51 74 Z"
+                  fill="#FAF8EB" stroke="#111314" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Face -->
+            <circle cx="72" cy="68" r="1.4" fill="#111314"/>
+            <path d="M77 67 L81 71 L76 72" stroke="#111314" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Little blue chill arcs -->
+            <path d="M94 53 C100 54, 103 58, 102 64 M104 52 C108 53, 110 56, 110 60" stroke="#00B2EE" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Blue laptop on lap -->
+            <path d="M77 92 L109 92 L114 70 L88 70 L83 89 L77 89 Z" fill="#FAF8EB" stroke="#00B2EE" stroke-width="2.8" stroke-linejoin="round"/>
+            <path d="M97 80 C98 83, 102 83, 103 80" stroke="#00B2EE" stroke-width="2.4" stroke-linecap="round"/>
+          </svg>
+        `
+      },
+      // Green Team Defaults (3, 4, 5)
+      {
+        id: 'dragon',
+        name: 'Happy Dragon',
+        svg: `
+          <svg viewBox="0 0 180 128" fill="none">
+            <!-- Green curly loop under chin -->
+            <path d="M90 98 C98 108, 115 104, 114 95 C113 88, 105 91, 109 98 C113 105, 128 104, 130 93" stroke="#9DC654" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Green fire burst -->
+            <path d="M139 76 L158 64 L149 76 L169 72 L152 84 L166 93 L148 90 L152 103 L140 90 L136 101 L134 85 Z" fill="#9DC654"/>
+            <!-- Green antlers -->
+            <path d="M88 55 L74 36 M80 44 L84 32 M93 52 L88 38" stroke="#9DC654" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Black textured dragon hump -->
+            <path d="M31 74 C29 42, 46 22, 62 24 C74 26, 77 45, 76 68 Z" fill="#111314"/>
+            <!-- Green crosshatch on hump -->
+            <path d="M40 60 L65 39 M44 68 L69 47 M46 43 L62 63 M54 36 L69 56" stroke="#9DC654" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Dragon body & legs -->
+            <path d="M31 73 L35 108 M36 104 L62 98 C68 97, 71 103, 66 106 M52 101 L55 108 M58 100 L61 107 M44 103 L47 110"
+                  stroke="#111314" stroke-width="3" stroke-linecap="round"/>
+            <path d="M39 95 L79 86 C86 85, 88 94, 82 97 M71 91 L74 99 M77 89 L80 97"
+                  stroke="#111314" stroke-width="3" stroke-linecap="round"/>
+            <!-- Green belly spikes -->
+            <path d="M45 86 L79 79 M50 85 L51 90 M58 83 L59 88 M66 82 L67 87 M74 80 L75 85" stroke="#9DC654" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Dragon head & snout -->
+            <path d="M77 65 L86 60 L83 56 L108 58 C113 58, 114 64, 112 68 L131 68 C131 61, 138 60, 141 65 C144 60, 150 61, 147 71 L143 78 L96 86 L86 92 L90 83 L79 86 L84 78 L75 76 L83 71 Z"
+                  fill="#FAF8EB" stroke="#111314" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Cute eyes & smile -->
+            <path d="M97 66 C97 72, 102 72, 103 67 C104 72, 109 72, 109 66" stroke="#111314" stroke-width="2.6" stroke-linecap="round"/>
+            <path d="M96 76 C103 80, 114 78, 136 74" stroke="#111314" stroke-width="2.6" stroke-linecap="round"/>
+            <circle cx="137" cy="68" r="1.5" fill="#111314"/>
+          </svg>
+        `
+      },
+      {
+        id: 'mermaid',
+        name: 'Joyful Mermaid',
+        svg: `
+          <svg viewBox="0 0 180 128" fill="none">
+            <!-- Green sparks left -->
+            <path d="M52 46 L42 44 M56 36 L47 29 M65 30 L61 21" stroke="#9DC654" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Green curly loop right -->
+            <path d="M111 49 C121 44, 127 52, 121 58 C116 62, 113 55, 119 54 C126 54, 129 65, 118 71" stroke="#9DC654" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Mermaid green tail -->
+            <path d="M84 82 C85 95, 72 103, 66 95 C60 88, 65 76, 66 73 L48 61 C50 74, 57 79, 63 82 C54 88, 51 102, 58 111 C71 124, 102 122, 111 106 C117 95, 113 82, 108 75 Z" fill="#9DC654"/>
+            <!-- Cream scales on tail -->
+            <path d="M86 84 C90 88, 95 88, 98 84 M98 84 C101 88, 106 88, 109 84 M79 93 C83 97, 89 97, 92 93 M92 93 C96 97, 102 97, 106 93 M68 103 C73 107, 79 107, 83 102 M83 102 C88 107, 95 107, 100 102 M72 112 C78 116, 86 116, 92 111"
+                  stroke="#FAF8EB" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- Fin lines -->
+            <path d="M53 67 L62 76 M58 75 L63 80" stroke="#FAF8EB" stroke-width="2" stroke-linecap="round"/>
+            <!-- Torso & arms pointing up -->
+            <path d="M85 78 L82 65 L66 47 C62 41, 66 33, 74 32 L89 30 L88 14 C88 9, 93 8, 94 13 L99 13 L103 45 L107 74"
+                  fill="#FAF8EB" stroke="#111314" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Head -->
+            <path d="M77 45 C77 38, 90 36, 94 42 L99 45 L93 48 C93 52, 86 55, 81 51 Z" fill="#FAF8EB" stroke="#111314" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M83 43 C83 46, 86 46, 87 43 C88 46, 91 46, 91 43" stroke="#111314" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- Green shell top -->
+            <ellipse cx="86" cy="64" rx="7" ry="5.5" fill="#9DC654"/>
+            <ellipse cx="101" cy="62" rx="7" ry="5.5" fill="#9DC654"/>
+            <path d="M83 61 L85 67 M89 61 L87 67 M98 59 L100 65 M104 59 L102 65" stroke="#FAF8EB" stroke-width="1.8" stroke-linecap="round"/>
+            <!-- Signature black curly loop under tail -->
+            <path d="M50 107 C63 126, 102 126, 110 109 C114 99, 103 95, 100 105 C98 117, 118 126, 128 111"
+                  stroke="#111314" stroke-width="2.8" stroke-linecap="round"/>
+          </svg>
+        `
+      },
+      {
+        id: 'centaur',
+        name: 'Cool Centaur',
+        svg: `
+          <svg viewBox="0 0 180 128" fill="none">
+            <!-- Green sparks over thumbs up -->
+            <path d="M40 31 L36 22 M49 27 L49 19 M58 30 L62 22" stroke="#9DC654" stroke-width="2.8" stroke-linecap="round"/>
+            <!-- Green curly loop left -->
+            <path d="M44 76 C45 86, 57 88, 59 80 C60 75, 53 75, 55 82 C57 88, 64 90, 68 88" stroke="#9DC654" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Black horse tail -->
+            <path d="M137 68 C147 61, 154 58, 160 58 M138 71 C148 67, 155 66, 160 67 M138 74 C146 73, 152 74, 156 76" stroke="#111314" stroke-width="3" stroke-linecap="round"/>
+            <!-- Lime green horse lower body -->
+            <path d="M77 70 L133 67 C142 67, 144 82, 139 91 L145 103 L135 120 L127 120 L135 103 L127 94 L122 104 L114 120 L107 120 L114 97 L102 96 L102 120 L94 120 L93 95 L86 95 L86 120 L79 120 L77 88 Z" fill="#9DC654"/>
+            <!-- Cream markings on horse hip -->
+            <path d="M119 72 L123 82 M125 71 L129 80 M131 71 L134 78" stroke="#FAF8EB" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Human upper body giving thumbs up -->
+            <path d="M78 72 L75 56 L61 67 C55 71, 47 67, 45 59 L42 52 C38 51, 38 43, 44 43 L47 36 C50 35, 52 40, 51 45 L55 56 L72 41 L82 40 L84 26 L99 26 L98 38 C108 40, 119 52, 121 60 C122 65, 113 70, 104 71 L101 80 L94 79 L95 70 L107 60 L96 51"
+                  fill="#FAF8EB" stroke="#111314" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Face -->
+            <path d="M84 32 L80 37 L86 38" stroke="#111314" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="91" cy="32" r="1.5" fill="#111314"/>
+            <path d="M88 39 C91 40, 94 39, 95 36" stroke="#111314" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- Hand on hip -->
+            <path d="M97 72 L97 80 M101 72 L101 80 M105 71 L104 79" stroke="#111314" stroke-width="2.6" stroke-linecap="round"/>
+            <!-- Signature black curly loop along ground -->
+            <path d="M74 121 L98 121 C111 121, 117 112, 111 109 C106 106, 104 114, 112 115 C120 116, 128 112, 134 107"
+                  stroke="#111314" stroke-width="2.8" stroke-linecap="round"/>
+          </svg>
+        `
+      }
+    ];
+
+        function updateStatsUI(stats, player) {
+      if (!stats) return;
+      const elAlgo = document.getElementById('statAlgo');
+      const elNodes = document.getElementById('statNodes');
+      const elCutoffs = document.getElementById('statCutoffs');
+      const elTime = document.getElementById('statTime');
+
+      const sideName = player === X ? 'Bot X' : 'Bot O';
+      const sideColor = player === X ? 'var(--blue)' : 'var(--green)';
+
+      if (elAlgo) {
+        elAlgo.innerHTML = `<span style="color:${sideColor};">[${sideName}]</span> ${stats.algorithm || 'AlphaBetaAgent'}`;
+      }
+      if (elNodes) elNodes.textContent = (stats.nodes_visited || 0).toLocaleString();
+      if (elCutoffs) elCutoffs.textContent = (stats.cutoffs || 0).toLocaleString();
+      if (elTime) elTime.textContent = (stats.elapsed_seconds || 0).toFixed(4) + 's';
+    }
+
+    /* =========================================================================
+       2. HAND-DRAWN X & O MARKER VARIANTS (Organic Feel, No Two Look Identical)
+       ========================================================================= */
+    const X_VARIANTS = [
+      // Variant 0
+      (anim) => `
+        <svg class="piece-svg" viewBox="0 0 40 40" fill="none">
+          <path class="${anim ? 'draw-stroke' : ''}" d="M8 9 C14 15.5, 25 26, 32 31.5" stroke="#00B2EE" stroke-width="5" stroke-linecap="round"/>
+          <path class="${anim ? 'draw-stroke delay' : ''}" d="M31.5 8.5 C24.5 16, 14.5 25, 8.5 32" stroke="#00B2EE" stroke-width="5" stroke-linecap="round"/>
+        </svg>`,
+      // Variant 1
+      (anim) => `
+        <svg class="piece-svg" viewBox="0 0 40 40" fill="none">
+          <path class="${anim ? 'draw-stroke' : ''}" d="M9.5 8 C16 16, 23 24, 31 32.5" stroke="#00B2EE" stroke-width="5.1" stroke-linecap="round"/>
+          <path class="${anim ? 'draw-stroke delay' : ''}" d="M32 9.5 C23 15, 16 24.5, 8 31" stroke="#00B2EE" stroke-width="4.9" stroke-linecap="round"/>
+        </svg>`,
+      // Variant 2
+      (anim) => `
+        <svg class="piece-svg" viewBox="0 0 40 40" fill="none">
+          <path class="${anim ? 'draw-stroke' : ''}" d="M7.5 10 C15 15, 24.5 25, 32.5 30.5" stroke="#00B2EE" stroke-width="5" stroke-linecap="round"/>
+          <path class="${anim ? 'draw-stroke delay' : ''}" d="M30.5 7.5 C25 16, 15 24, 9 32.5" stroke="#00B2EE" stroke-width="5.1" stroke-linecap="round"/>
+        </svg>`,
+      // Variant 3
+      (anim) => `
+        <svg class="piece-svg" viewBox="0 0 40 40" fill="none">
+          <path class="${anim ? 'draw-stroke' : ''}" d="M9 8.5 C15 14, 26 24, 31 32" stroke="#00B2EE" stroke-width="5.2" stroke-linecap="round"/>
+          <path class="${anim ? 'draw-stroke delay' : ''}" d="M32.5 9 C24.5 16.5, 15.5 25, 7.5 31.5" stroke="#00B2EE" stroke-width="4.8" stroke-linecap="round"/>
+        </svg>`
+    ];
+
+    const O_VARIANTS = [
+      // Variant 0
+      (anim) => `
+        <svg class="piece-svg" viewBox="0 0 40 40" fill="none">
+          <path class="${anim ? 'draw-stroke' : ''}" d="M21 7.5 C11.5 7, 6.5 14, 7.2 21.5 C8 29.5, 14.5 33.5, 22 32.8 C29.8 32, 33.8 25, 32.8 17.5 C31.8 10.5, 26 7.5, 19.5 8" stroke="#9DC654" stroke-width="5" stroke-linecap="round"/>
+        </svg>`,
+      // Variant 1
+      (anim) => `
+        <svg class="piece-svg" viewBox="0 0 40 40" fill="none">
+          <path class="${anim ? 'draw-stroke' : ''}" d="M18.5 7.8 C10.5 8.8, 6.8 15.5, 7.6 22.8 C8.6 30.2, 16 33.4, 23 32.2 C30.5 31, 33.6 23.5, 32.4 16.2 C31.2 9.5, 24.5 7, 17.8 8.2" stroke="#9DC654" stroke-width="5.1" stroke-linecap="round"/>
+        </svg>`,
+      // Variant 2
+      (anim) => `
+        <svg class="piece-svg" viewBox="0 0 40 40" fill="none">
+          <path class="${anim ? 'draw-stroke' : ''}" d="M22.5 8 C13 6.8, 6.8 13, 7.5 21 C8.2 28.8, 14 33.6, 21.5 33 C29.2 32.4, 33.5 25.8, 32.8 18.2 C32.2 11.4, 27 8.4, 21 8.5" stroke="#9DC654" stroke-width="5" stroke-linecap="round"/>
+        </svg>`,
+      // Variant 3
+      (anim) => `
+        <svg class="piece-svg" viewBox="0 0 40 40" fill="none">
+          <path class="${anim ? 'draw-stroke' : ''}" d="M19.8 7.4 C11 7.6, 6.6 14.8, 7.4 22 C8.3 29.8, 15.2 33.2, 22.5 32.5 C30 31.8, 33.6 24.4, 32.5 17 C31.4 10, 25.2 7.2, 18.5 7.8" stroke="#9DC654" stroke-width="4.9" stroke-linecap="round"/>
+        </svg>`
+    ];
+
+        function updateStatsUI(stats, player) {
+      if (!stats) return;
+      const elAlgo = document.getElementById('statAlgo');
+      const elNodes = document.getElementById('statNodes');
+      const elCutoffs = document.getElementById('statCutoffs');
+      const elTime = document.getElementById('statTime');
+
+      const sideName = player === X ? 'Bot X' : 'Bot O';
+      const sideColor = player === X ? 'var(--blue)' : 'var(--green)';
+
+      if (elAlgo) {
+        elAlgo.innerHTML = `<span style="color:${sideColor};">[${sideName}]</span> ${stats.algorithm || 'AlphaBetaAgent'}`;
+      }
+      if (elNodes) elNodes.textContent = (stats.nodes_visited || 0).toLocaleString();
+      if (elCutoffs) elCutoffs.textContent = (stats.cutoffs || 0).toLocaleString();
+      if (elTime) elTime.textContent = (stats.elapsed_seconds || 0).toFixed(4) + 's';
+    }
+
+    /* =========================================================================
+       3. SUBTLE HAND-DRAWN / MARKER SOUND ENGINE (Web Audio API)
+       ========================================================================= */
+    const SoundFX = (() => {
+      let ctx = null;
+      let muted = false;
+
+      function ensureCtx() {
+        if (muted) return null;
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return null;
+          ctx = new AudioCtx();
+        }
+        if (ctx.state === 'suspended') ctx.resume();
+        return ctx;
+      }
+
+      // Synthesizes a short felt-tip marker stroke on textured paper
+      function markerStroke(startOffset, duration, freqStart, freqEnd, gainPeak) {
+        const ac = ensureCtx();
+        if (!ac) return;
+        const now = ac.currentTime + startOffset;
+        const bufferSize = Math.floor(ac.sampleRate * duration);
+        const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.7;
+        }
+
+        const noise = ac.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = ac.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.Q.value = 3.2;
+        filter.frequency.setValueAtTime(freqStart, now);
+        filter.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
+
+        const gain = ac.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(gainPeak, now + duration * 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ac.destination);
+        noise.start(now);
+        noise.stop(now + duration + 0.01);
+      }
+
+      function playX() {
+        // Two quick diagonal marker strokes
+        markerStroke(0, 0.085, 1300, 2100, 0.13);
+        markerStroke(0.075, 0.09, 1550, 2400, 0.12);
+      }
+
+      function playO() {
+        // One smooth looping brush stroke
+        markerStroke(0, 0.155, 1050, 1750, 0.13);
+      }
+
+      function playUndo() {
+        // Gentle eraser rub
+        markerStroke(0, 0.11, 720, 480, 0.1);
+      }
+
+      function playClick() {
+        const ac = ensureCtx();
+        if (!ac) return;
+        const now = ac.currentTime;
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(420, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.045);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      }
+
+      function playBlockedNote() {
+        const ac = ensureCtx();
+        if (!ac) return;
+        const now = ac.currentTime;
+        [330, 280].forEach((freq, i) => {
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.11);
+          gain.gain.setValueAtTime(0.08, now + i * 0.11);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.11 + 0.14);
+          osc.connect(gain);
+          gain.connect(ac.destination);
+          osc.start(now + i * 0.11);
+          osc.stop(now + i * 0.11 + 0.15);
+        });
+      }
+
+      function playWin() {
+        const ac = ensureCtx();
+        if (!ac) return;
+        const now = ac.currentTime;
+        // Cheerful playful doodle arpeggio
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.type = 'triangle';
+          const t = now + idx * 0.085;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.linearRampToValueAtTime(0.11, t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
+          osc.connect(gain);
+          gain.connect(ac.destination);
+          osc.start(t);
+          osc.stop(t + 0.36);
+        });
+      }
+
+      function playDraw() {
+        const ac = ensureCtx();
+        if (!ac) return;
+        const now = ac.currentTime;
+        [440, 392, 349.23].forEach((freq, idx) => {
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.type = 'sine';
+          const t = now + idx * 0.11;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.08, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+          osc.connect(gain);
+          gain.connect(ac.destination);
+          osc.start(t);
+          osc.stop(t + 0.24);
+        });
+      }
+
+      return {
+        playX, playO, playUndo, playClick, playBlockedNote, playWin, playDraw,
+        toggleMute() {
+          muted = !muted;
+          return muted;
+        },
+        isMuted() {
+          return muted;
+        }
+      };
+    })();
+
+        function updateStatsUI(stats, player) {
+      if (!stats) return;
+      const elAlgo = document.getElementById('statAlgo');
+      const elNodes = document.getElementById('statNodes');
+      const elCutoffs = document.getElementById('statCutoffs');
+      const elTime = document.getElementById('statTime');
+
+      const sideName = player === X ? 'Bot X' : 'Bot O';
+      const sideColor = player === X ? 'var(--blue)' : 'var(--green)';
+
+      if (elAlgo) {
+        elAlgo.innerHTML = `<span style="color:${sideColor};">[${sideName}]</span> ${stats.algorithm || 'AlphaBetaAgent'}`;
+      }
+      if (elNodes) elNodes.textContent = (stats.nodes_visited || 0).toLocaleString();
+      if (elCutoffs) elCutoffs.textContent = (stats.cutoffs || 0).toLocaleString();
+      if (elTime) elTime.textContent = (stats.elapsed_seconds || 0).toFixed(4) + 's';
+    }
+
+    /* =========================================================================
+       4. VIETNAMESE CARO 9x9 ENGINE & SMART AI
+       ========================================================================= */
+    const SIZE = 9;
+    const EMPTY = 0;
+    const X = 1;
+    const O = 2;
+    const DIRS = [
+      [0, 1],   // horizontal
+      [1, 0],   // vertical
+      [1, 1],   // diag down-right
+      [1, -1]   // diag down-left
+    ];
+
+    function inBounds(r, c) {
+      return r >= 0 && r < SIZE && c >= 0 && c < SIZE;
+    }
+
+    /**
+     * Checks Vietnamese Caro win starting from (r, c):
+     * 5 or more consecutive stones of the same color,
+     * NOT blocked on BOTH ends by the opponent's stones.
+     * Returns { winner, cells, doubleBlockedFound }
+     */
+    function checkVietnameseWin(board, r, c) {
+      const player = board[r][c];
+      if (!player) return { winner: 0, cells: null, doubleBlockedFound: false };
+      const opp = player === X ? O : X;
+      let doubleBlockedFound = false;
+
+      for (const [dr, dc] of DIRS) {
+        let r0 = r, c0 = c;
+        while (inBounds(r0 - dr, c0 - dc) && board[r0 - dr][c0 - dc] === player) {
+          r0 -= dr;
+          c0 -= dc;
+        }
+        let r1 = r, c1 = c;
+        while (inBounds(r1 + dr, c1 + dc) && board[r1 + dr][c1 + dc] === player) {
+          r1 += dr;
+          c1 += dc;
+        }
+
+        const cells = [];
+        let cr = r0, cc = c0;
+        while (true) {
+          cells.push({ r: cr, c: cc });
+          if (cr === r1 && cc === c1) break;
+          cr += dr;
+          cc += dc;
+        }
+
+        if (cells.length >= 5) {
+          const br = r0 - dr, bc = c0 - dc;
+          const ar = r1 + dr, ac = c1 + dc;
+          const blockedBefore = inBounds(br, bc) && board[br][bc] === opp;
+          const blockedAfter = inBounds(ar, ac) && board[ar][ac] === opp;
+
+          // Luat de bai: cu du tu 5 quan lien tiep tro len la thang, khong chan 2 dau
+          return { winner: player, cells, doubleBlockedFound: false };
+        }
+      }
+      return { winner: 0, cells: null, doubleBlockedFound };
+    }
+
+    /* ---------- AI HEURISTIC & ALPHA-BETA SEARCH ---------- */
+    const CaroAI = (() => {
+      function getCandidates(board) {
+        const list = [];
+        let hasStone = false;
+        const visited = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+
+        for (let r = 0; r < SIZE; r++) {
+          for (let c = 0; c < SIZE; c++) {
+            if (board[r][c] !== EMPTY) {
+              hasStone = true;
+              for (let dr = -2; dr <= 2; dr++) {
+                for (let dc = -2; dc <= 2; dc++) {
+                  const nr = r + dr, nc = c + dc;
+                  if (inBounds(nr, nc) && board[nr][nc] === EMPTY && !visited[nr][nc]) {
+                    visited[nr][nc] = true;
+                    list.push({ r: nr, c: nc });
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (!hasStone) {
+          // Opening move near center with subtle playful variety
+          const centers = [
+            { r: 4, c: 4 }, { r: 4, c: 4 }, { r: 4, c: 4 },
+            { r: 3, c: 4 }, { r: 4, c: 3 }, { r: 4, c: 5 }, { r: 5, c: 4 }
+          ];
+          return [centers[Math.floor(Math.random() * centers.length)]];
+        }
+        return list;
+      }
+
+      // Score a single line array (values: EMPTY, player, opp) from `player`'s perspective
+      function evaluateLineFor(line, player) {
+        const opp = player === X ? O : X;
+        const len = line.length;
+        let score = 0;
+        let i = 0;
+
+        while (i < len) {
+          if (line[i] !== player) {
+            i++;
+            continue;
+          }
+          const start = i;
+          while (i < len && line[i] === player) i++;
+          const end = i - 1;
+          const count = end - start + 1;
+
+          const leftIsOpp = start > 0 && line[start - 1] === opp;
+          const rightIsOpp = end < len - 1 && line[end + 1] === opp;
+          const leftEmpty = start > 0 && line[start - 1] === EMPTY;
+          const rightEmpty = end < len - 1 && line[end + 1] === EMPTY;
+
+          // Vietnamese Caro win check!
+          if (count >= 5) {
+            if (!(leftIsOpp && rightIsOpp)) {
+              return 1000000;
+            }
+            continue; // Double-blocked 5 is dead!
+          }
+
+          // Count total available space along this segment to see if 5 is even possible
+          let leftSpace = 0;
+          for (let k = start - 1; k >= 0 && line[k] !== opp; k--) leftSpace++;
+          let rightSpace = 0;
+          for (let k = end + 1; k < len && line[k] !== opp; k++) rightSpace++;
+
+          const maxReach = count + leftSpace + rightSpace;
+          if (maxReach < 5) continue;
+
+          // Check if extending to 5 would be double-blocked by opp
+          const openEnds = (leftEmpty ? 1 : 0) + (rightEmpty ? 1 : 0);
+
+          if (count === 4) {
+            if (openEnds === 2) score += 90000;
+            else if (openEnds === 1) {
+              // Ensure the resulting 5 isn't immediately blocked on both ends
+              const freeSideBlockedNext =
+                (leftEmpty && start - 2 >= 0 && line[start - 2] === opp && rightIsOpp) ||
+                (rightEmpty && end + 2 < len && line[end + 2] === opp && leftIsOpp);
+              score += freeSideBlockedNext ? 40 : 12000;
+            }
+          } else if (count === 3) {
+            if (openEnds === 2) {
+              score += maxReach >= 6 ? 7500 : 1400;
+            } else if (openEnds === 1) {
+              score += 480;
+            }
+          } else if (count === 2) {
+            if (openEnds === 2) score += 260;
+            else if (openEnds === 1) score += 45;
+          } else if (count === 1) {
+            if (openEnds === 2) score += 16;
+          }
+        }
+
+        // Also detect split threats like XX_X or X_XX (1-gap patterns)
+        for (let k = 0; k <= len - 4; k++) {
+          let pCount = 0, eCount = 0;
+          for (let m = 0; m < 4; m++) {
+            if (line[k + m] === player) pCount++;
+            else if (line[k + m] === EMPTY) eCount++;
+          }
+          if (pCount === 3 && eCount === 1 && line[k] === player && line[k + 3] === player) {
+            const leftOpen = k > 0 && line[k - 1] === EMPTY;
+            const rightOpen = k + 4 < len && line[k + 4] === EMPTY;
+            if (leftOpen && rightOpen) score += 4200;
+            else if (leftOpen || rightOpen) score += 450;
+          }
+        }
+
+        // Detect split 4: XXX_X or XX_XX or X_XXX (window of 5 with 4 player + 1 empty)
+        for (let k = 0; k <= len - 5; k++) {
+          let pCount = 0, eCount = 0;
+          for (let m = 0; m < 5; m++) {
+            if (line[k + m] === player) pCount++;
+            else if (line[k + m] === EMPTY) eCount++;
+          }
+          if (pCount === 4 && eCount === 1) {
+            const leftOpp = k > 0 && line[k - 1] === opp;
+            const rightOpp = k + 5 < len && line[k + 5] === opp;
+            if (!(leftOpp && rightOpp)) {
+              score += 11000;
+            }
+          }
+        }
+
+        return score;
+      }
+
+      function evaluateBoard(board, aiPlayer) {
+        const opp = aiPlayer === X ? O : X;
+        let aiScore = 0;
+        let oppScore = 0;
+
+        // Collect all rows, cols, and diagonals of length >= 5
+        // Rows
+        for (let r = 0; r < SIZE; r++) {
+          const line = board[r];
+          aiScore += evaluateLineFor(line, aiPlayer);
+          oppScore += evaluateLineFor(line, opp);
+        }
+        // Cols
+        for (let c = 0; c < SIZE; c++) {
+          const line = [];
+          for (let r = 0; r < SIZE; r++) line.push(board[r][c]);
+          aiScore += evaluateLineFor(line, aiPlayer);
+          oppScore += evaluateLineFor(line, opp);
+        }
+        // Diagonals down-right
+        for (let start = -(SIZE - 5); start <= SIZE - 5; start++) {
+          const line = [];
+          for (let r = 0; r < SIZE; r++) {
+            const c = r - start;
+            if (c >= 0 && c < SIZE) line.push(board[r][c]);
+          }
+          aiScore += evaluateLineFor(line, aiPlayer);
+          oppScore += evaluateLineFor(line, opp);
+        }
+        // Diagonals down-left
+        for (let sum = 4; sum <= 2 * SIZE - 6; sum++) {
+          const line = [];
+          for (let r = 0; r < SIZE; r++) {
+            const c = sum - r;
+            if (c >= 0 && c < SIZE) line.push(board[r][c]);
+          }
+          aiScore += evaluateLineFor(line, aiPlayer);
+          oppScore += evaluateLineFor(line, opp);
+        }
+
+        // Slight center preference
+        for (let r = 0; r < SIZE; r++) {
+          for (let c = 0; c < SIZE; c++) {
+            if (board[r][c] === EMPTY) continue;
+            const dist = Math.abs(r - 4) + Math.abs(c - 4);
+            const bonus = (8 - dist) * 3;
+            if (board[r][c] === aiPlayer) aiScore += bonus;
+            else oppScore += bonus;
+          }
+        }
+
+        return aiScore - oppScore * 1.12;
+      }
+
+      // Fast local score for move ordering
+      function quickMoveScore(board, r, c, player) {
+        const opp = player === X ? O : X;
+        let total = (8 - (Math.abs(r - 4) + Math.abs(c - 4))) * 4;
+
+        for (const who of [player, opp]) {
+          const weight = who === player ? 1.05 : 1.0;
+          for (const [dr, dc] of DIRS) {
+            let count = 1;
+            let openEnds = 0;
+            let nr = r + dr, nc = c + dc;
+            while (inBounds(nr, nc) && board[nr][nc] === who) {
+              count++;
+              nr += dr;
+              nc += dc;
+            }
+            if (inBounds(nr, nc) && board[nr][nc] === EMPTY) openEnds++;
+
+            nr = r - dr; nc = c - dc;
+            while (inBounds(nr, nc) && board[nr][nc] === who) {
+              count++;
+              nr -= dr;
+              nc -= dc;
+            }
+            if (inBounds(nr, nc) && board[nr][nc] === EMPTY) openEnds++;
+
+            if (count >= 5) total += 100000 * weight;
+            else if (count === 4 && openEnds === 2) total += 15000 * weight;
+            else if (count === 4 && openEnds === 1) total += 4000 * weight;
+            else if (count === 3 && openEnds === 2) total += 1800 * weight;
+            else if (count === 3 && openEnds === 1) total += 250 * weight;
+            else if (count === 2 && openEnds === 2) total += 140 * weight;
+          }
+        }
+        return total;
+      }
+
+      function alphaBeta(board, depth, alpha, beta, maximizing, aiPlayer, lastR, lastC) {
+        if (lastR !== -1) {
+          const res = checkVietnameseWin(board, lastR, lastC);
+          if (res.winner === aiPlayer) return 1000000 + depth * 1000;
+          if (res.winner && res.winner !== aiPlayer) return -1000000 - depth * 1000;
+        }
+        if (depth === 0) {
+          return evaluateBoard(board, aiPlayer);
+        }
+
+        const currentPlayer = maximizing ? aiPlayer : (aiPlayer === X ? O : X);
+        let candidates = getCandidates(board);
+        if (candidates.length === 0) return 0;
+
+        candidates.sort((a, b) => quickMoveScore(board, b.r, b.c, currentPlayer) - quickMoveScore(board, a.r, a.c, currentPlayer));
+        // Limit branching factor for snappy response
+        const maxBranch = depth >= 3 ? 10 : 12;
+        if (candidates.length > maxBranch) candidates = candidates.slice(0, maxBranch);
+
+        if (maximizing) {
+          let best = -Infinity;
+          for (const mv of candidates) {
+            board[mv.r][mv.c] = currentPlayer;
+            const val = alphaBeta(board, depth - 1, alpha, beta, false, aiPlayer, mv.r, mv.c);
+            board[mv.r][mv.c] = EMPTY;
+            if (val > best) best = val;
+            if (best > alpha) alpha = best;
+            if (beta <= alpha) break;
+          }
+          return best;
+        } else {
+          let best = Infinity;
+          for (const mv of candidates) {
+            board[mv.r][mv.c] = currentPlayer;
+            const val = alphaBeta(board, depth - 1, alpha, beta, true, aiPlayer, mv.r, mv.c);
+            board[mv.r][mv.c] = EMPTY;
+            if (val < best) best = val;
+            if (best < beta) beta = best;
+            if (beta <= alpha) break;
+          }
+          return best;
+        }
+      }
+
+      function chooseMove(board, aiPlayer, difficulty) {
+        const opp = aiPlayer === X ? O : X;
+        const candidates = getCandidates(board);
+        if (candidates.length === 0) return null;
+        if (candidates.length === 1) return candidates[0];
+
+        // 1. Always take an immediate Vietnamese Caro win!
+        for (const mv of candidates) {
+          board[mv.r][mv.c] = aiPlayer;
+          const win = checkVietnameseWin(board, mv.r, mv.c).winner === aiPlayer;
+          board[mv.r][mv.c] = EMPTY;
+          if (win) return mv;
+        }
+
+        // 2. Always block opponent's immediate win (except tiny occasional slip on Easy)
+        const blockChance = difficulty === 'easy' ? 0.72 : 1.0;
+        if (Math.random() < blockChance) {
+          for (const mv of candidates) {
+            board[mv.r][mv.c] = opp;
+            const oppWin = checkVietnameseWin(board, mv.r, mv.c).winner === opp;
+            board[mv.r][mv.c] = EMPTY;
+            if (oppWin) return mv;
+          }
+        }
+
+        // Sort candidates by tactical urgency
+        candidates.sort((a, b) => quickMoveScore(board, b.r, b.c, aiPlayer) - quickMoveScore(board, a.r, a.c, aiPlayer));
+
+        if (difficulty === 'easy') {
+          const top = candidates.slice(0, Math.min(6, candidates.length));
+          let scored = top.map(mv => {
+            board[mv.r][mv.c] = aiPlayer;
+            const s = evaluateBoard(board, aiPlayer) + (Math.random() - 0.5) * 900;
+            board[mv.r][mv.c] = EMPTY;
+            return { mv, s };
+          });
+          scored.sort((a, b) => b.s - a.s);
+          return scored[0].mv;
+        }
+
+        const depth = difficulty === 'hard' ? 3 : 2;
+        const branch = difficulty === 'hard' ? 12 : 10;
+        const topMoves = candidates.slice(0, Math.min(branch, candidates.length));
+
+        let bestScore = -Infinity;
+        let bestMoves = [];
+
+        for (const mv of topMoves) {
+          board[mv.r][mv.c] = aiPlayer;
+          const score = alphaBeta(board, depth - 1, -Infinity, Infinity, false, aiPlayer, mv.r, mv.c);
+          board[mv.r][mv.c] = EMPTY;
+
+          if (score > bestScore + 15) {
+            bestScore = score;
+            bestMoves = [mv];
+          } else if (Math.abs(score - bestScore) <= 15) {
+            bestMoves.push(mv);
+          }
+        }
+
+        return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+      }
+
+      return { chooseMove };
+    })();
+
+        function updateStatsUI(stats, player) {
+      if (!stats) return;
+      const elAlgo = document.getElementById('statAlgo');
+      const elNodes = document.getElementById('statNodes');
+      const elCutoffs = document.getElementById('statCutoffs');
+      const elTime = document.getElementById('statTime');
+
+      const sideName = player === X ? 'Bot X' : 'Bot O';
+      const sideColor = player === X ? 'var(--blue)' : 'var(--green)';
+
+      if (elAlgo) {
+        elAlgo.innerHTML = `<span style="color:${sideColor};">[${sideName}]</span> ${stats.algorithm || 'AlphaBetaAgent'}`;
+      }
+      if (elNodes) elNodes.textContent = (stats.nodes_visited || 0).toLocaleString();
+      if (elCutoffs) elCutoffs.textContent = (stats.cutoffs || 0).toLocaleString();
+      if (elTime) elTime.textContent = (stats.elapsed_seconds || 0).toFixed(4) + 's';
+    }
+
+    /* =========================================================================
+       5. APPLICATION STATE & UI CONTROLLER
+       ========================================================================= */
+    const state = {
+      mode: 'human-ai',     // 'human-ai' | 'ai-ai'
+      humanSide: X,         // X or O (only used in human-ai)
+      algorithm: 'alpha-beta',
+      depth: 2,
+      botXAlgo: 'alpha-beta',
+      botOAlgo: 'alpha-beta',
+      botXDepth: 2,
+      botODepth: 2,
+      aiSpeed: 520,         // ms delay in AI vs AI
+      aiPaused: false,
+
+      board: [],
+      turn: X,
+      history: [],          // [{ r, c, player, variant }]
+      gameOver: false,
+      winner: 0,
+      winCells: null,
+      scores: { [X]: 0, [O]: 0 },
+
+      charIdxX: 0,          // Floatie Coder
+      charIdxO: 3,          // Happy Dragon
+
+      aiTimer: null,
+      sessionId: 0          // Cancels stale async AI moves
+    };
+
+    // DOM refs
+    const els = {
+      boardGridSvg: document.getElementById('boardGridSvg'),
+      boardCells: document.getElementById('boardCells'),
+      winLineSvg: document.getElementById('winLineSvg'),
+      statusRibbon: document.getElementById('statusRibbon'),
+      modeHumanAi: document.getElementById('modeHumanAi'),
+      modeAiAi: document.getElementById('modeAiAi'),
+      muteBtn: document.getElementById('muteBtn'),
+      muteIcon: document.getElementById('muteIcon'),
+      muteText: document.getElementById('muteText'),
+      undoBtn: document.getElementById('undoBtn'),
+      restartBtn: document.getElementById('restartBtn'),
+      aiPauseBtn: document.getElementById('aiPauseBtn'),
+      aiStepBtn: document.getElementById('aiStepBtn'),
+      cardX: document.getElementById('cardX'),
+      cardO: document.getElementById('cardO'),
+      roleLabelX: document.getElementById('roleLabelX'),
+      roleLabelO: document.getElementById('roleLabelO'),
+      scoreX: document.getElementById('scoreX'),
+      scoreO: document.getElementById('scoreO'),
+      avatarStageX: document.getElementById('avatarStageX'),
+      avatarStageO: document.getElementById('avatarStageO'),
+      charNameX: document.getElementById('charNameX'),
+      charNameO: document.getElementById('charNameO'),
+      cycleX: document.getElementById('cycleX'),
+      cycleO: document.getElementById('cycleO'),
+      humanSettings: document.getElementById('humanSettings'),
+      aiAiSettings: document.getElementById('aiAiSettings'),
+      playAsX: document.getElementById('playAsX'),
+      playAsO: document.getElementById('playAsO'),
+      diffPills: document.getElementById('diffPills'),
+      botXDiffPills: document.getElementById('botXDiffPills'),
+      botODiffPills: document.getElementById('botODiffPills'),
+      speedPills: document.getElementById('speedPills'),
+      moveCountText: document.getElementById('moveCountText')
+    };
+
+    /* ---------- BUILD ORGANIC HAND-DRAWN 9x9 GRID SVG ---------- */
+    function renderHandDrawnGrid() {
+      const step = 450 / SIZE; // 50px per cell in viewBox
+      let paths = '';
+
+      // Slight deterministic wobble so the board looks authentically hand-inked
+      const wobble = (i, salt) => Math.sin(i * 2.7 + salt) * 1.45;
+
+      // Vertical inner lines + subtle outer frame guide
+      for (let i = 1; i < SIZE; i++) {
+        const x = i * step;
+        const w1 = wobble(i, 1.1);
+        const w2 = wobble(i, 4.3);
+        paths += `<path d="M ${x + w1 * 0.4} 2 Q ${x + w1} 150, ${x - w2} 300 T ${x + w2 * 0.4} 448"
+                        stroke="#111314" stroke-width="2" stroke-linecap="round" opacity="0.72"/>`;
+      }
+
+      // Horizontal inner lines
+      for (let j = 1; j < SIZE; j++) {
+        const y = j * step;
+        const w1 = wobble(j, 2.5);
+        const w2 = wobble(j, 5.9);
+        paths += `<path d="M 2 ${y + w1 * 0.4} Q 150 ${y - w1}, 300 ${y + w2} T 448 ${y - w2 * 0.4}"
+                        stroke="#111314" stroke-width="2" stroke-linecap="round" opacity="0.72"/>`;
+      }
+
+      // Tiny hand-inked star dot in center cell (E5)
+      paths += `<circle cx="225" cy="225" r="3.2" fill="#111314" opacity="0.22"/>`;
+
+      els.boardGridSvg.innerHTML = paths;
+    }
+
+    /* ---------- BUILD 81 INTERACTIVE BOARD CELLS ---------- */
+    const cellNodes = [];
+    function initBoardDOM() {
+      els.boardCells.innerHTML = '';
+      cellNodes.length = 0;
+      const cols = 'ABCDEFGHI';
+      for (let r = 0; r < SIZE; r++) {
+        cellNodes[r] = [];
+        for (let c = 0; c < SIZE; c++) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'cell';
+          btn.setAttribute('aria-label', `Row ${r + 1}, Column ${cols[c]}`);
+          btn.dataset.r = r;
+          btn.dataset.c = c;
+          btn.addEventListener('click', () => handleCellClick(r, c));
+          els.boardCells.appendChild(btn);
+          cellNodes[r][c] = btn;
+        }
+      }
+    }
+
+    function isHumanTurn() {
+      return state.mode === 'human-ai' && !state.gameOver && state.turn === state.humanSide;
+    }
+
+    function ghostSvgFor(player) {
+      return player === X
+        ? `<div class="ghost-piece">${X_VARIANTS[0](false)}</div>`
+        : `<div class="ghost-piece">${O_VARIANTS[0](false)}</div>`;
+    }
+
+    function lastMoveHighlightSvg(player) {
+      const color = player === X ? '#00B2EE' : '#9DC654';
+      return `
+        <svg class="last-move-ring" viewBox="0 0 50 50" fill="none" aria-hidden="true">
+          <path d="M9 6 C20 3, 35 4, 43 8 C47 18, 46 34, 43 43 C32 46, 17 47, 7 43 C4 32, 4 17, 9 6 Z"
+                stroke="#111314" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round" opacity="0.65"/>
+          <path d="M3 10 L8 13 M44 4 L40 9 M45 40 L49 43 M5 43 L9 39"
+                stroke="${color}" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      `;
+    }
+
+    function renderBoard(animateLast = false) {
+      const lastMove = state.history.length ? state.history[state.history.length - 1] : null;
+      const winSet = new Set((state.winCells || []).map(p => `${p.r},${p.c}`));
+      const canHumanClick = isHumanTurn();
+
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          const cell = cellNodes[r][c];
+          const val = state.board[r][c];
+          const isLast = lastMove && lastMove.r === r && lastMove.c === c;
+          const isWin = winSet.has(`${r},${c}`);
+
+          cell.classList.toggle('occupied', val !== EMPTY);
+          cell.classList.toggle('locked', !canHumanClick);
+          cell.classList.toggle('win-cell', isWin);
+
+          if (val === EMPTY) {
+            cell.innerHTML = canHumanClick ? ghostSvgFor(state.humanSide) : '';
+          } else {
+            const histEntry = state.history.find(h => h.r === r && h.c === c);
+            const variant = histEntry ? histEntry.variant : 0;
+            const shouldAnim = animateLast && isLast;
+            const pieceHtml = val === X
+              ? X_VARIANTS[variant](shouldAnim)
+              : O_VARIANTS[variant](shouldAnim);
+            cell.innerHTML = `${isLast ? lastMoveHighlightSvg(val) : ''}${pieceHtml}`;
+          }
+        }
+      }
+
+      renderWinningLine();
+      els.moveCountText.textContent = `${state.history.length} / ${SIZE * SIZE}`;
+    }
+
+    function renderWinningLine() {
+      if (!state.winCells || state.winCells.length < 5) {
+        els.winLineSvg.innerHTML = '';
+        return;
+      }
+
+      const step = 450 / SIZE;
+      const first = state.winCells[0];
+      const last = state.winCells[state.winCells.length - 1];
+
+      const x1 = first.c * step + step / 2;
+      const y1 = first.r * step + step / 2;
+      const x2 = last.c * step + step / 2;
+      const y2 = last.r * step + step / 2;
+
+      // Extend slightly past first & last center for expressive hand-drawn marker sweep
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len;
+      const uy = dy / len;
+      const sx = x1 - ux * 18;
+      const sy = y1 - uy * 18;
+      const ex = x2 + ux * 18;
+      const ey = y2 + uy * 18;
+      const mx = (sx + ex) / 2 - uy * 5;
+      const my = (sy + ey) / 2 + ux * 5;
+
+      const accent = state.winner === X ? '#00B2EE' : '#9DC654';
+
+      els.winLineSvg.innerHTML = `
+        <!-- Bold black ink under-stroke -->
+        <path class="win-strike-path" d="M ${sx} ${sy} Q ${mx} ${my}, ${ex} ${ey}"
+              stroke="#111314" stroke-width="11" stroke-linecap="round" opacity="0.92"/>
+        <!-- Bright team color inner marker highlight -->
+        <path class="win-strike-path" d="M ${sx} ${sy} Q ${mx} ${my}, ${ex} ${ey}"
+              stroke="${accent}" stroke-width="5.5" stroke-linecap="round"/>
+        <!-- Little victory sparks at both ends -->
+        <g stroke="#111314" stroke-width="2.6" stroke-linecap="round">
+          <path d="M ${ex + ux * 8} ${ey + uy * 8} L ${ex + ux * 18} ${ey + uy * 18}"/>
+          <path d="M ${ex - uy * 10} ${ey + ux * 10} L ${ex - uy * 18 + ux * 6} ${ey + ux * 18 + uy * 6}"/>
+          <path d="M ${ex + uy * 10} ${ey - ux * 10} L ${ex + uy * 18 + ux * 6} ${ey - ux * 18 + uy * 6}"/>
+        </g>
+      `;
+    }
+
+    function renderAvatarsAndCards() {
+      const charX = CHARACTERS[state.charIdxX];
+      const charO = CHARACTERS[state.charIdxO];
+
+      els.avatarStageX.innerHTML = charX.svg;
+      els.charNameX.textContent = charX.name;
+      els.avatarStageO.innerHTML = charO.svg;
+      els.charNameO.textContent = charO.name;
+
+      els.scoreX.textContent = state.scores[X];
+      els.scoreO.textContent = state.scores[O];
+
+      const xIsAI = state.mode === 'ai-ai' || state.humanSide !== X;
+      const oIsAI = state.mode === 'ai-ai' || state.humanSide !== O;
+
+      function formatAlgo(algo, depth) {
+        if (algo === 'alpha-beta') return `Alpha-Beta (d=${depth})`;
+        if (algo === 'minimax') return `MiniMax (d=${depth})`;
+        return 'RandomBot';
+      }
+      if (state.mode === 'ai-ai') {
+        els.roleLabelX.textContent = `Bot X: ${formatAlgo(state.botXAlgo, state.botXDepth)}`;
+        els.roleLabelO.textContent = `Bot O: ${formatAlgo(state.botOAlgo, state.botODepth)}`;
+      } else {
+        els.roleLabelX.textContent = state.humanSide === X ? 'You (X)' : `Bot X: ${formatAlgo(state.algorithm, state.depth)}`;
+        els.roleLabelO.textContent = state.humanSide === O ? 'You (O)' : `Bot O: ${formatAlgo(state.algorithm, state.depth)}`;
+      }
+
+      els.cardX.classList.toggle('is-ai', xIsAI);
+      els.cardO.classList.toggle('is-ai', oIsAI);
+
+      els.cardX.classList.toggle('active-turn', !state.gameOver && state.turn === X);
+      els.cardO.classList.toggle('active-turn', !state.gameOver && state.turn === O);
+
+      els.cardX.classList.toggle('is-winner', state.gameOver && state.winner === X);
+      els.cardO.classList.toggle('is-winner', state.gameOver && state.winner === O);
+    }
+
+    function setStatus(text, extraClass = '') {
+      els.statusRibbon.textContent = text;
+      els.statusRibbon.className = `status-ribbon ${extraClass}`.trim();
+    }
+
+    function updateDefaultStatus() {
+      if (state.gameOver) {
+        if (state.winner === X) {
+          const who = state.mode === 'ai-ai'
+            ? `${CHARACTERS[state.charIdxX].name} (Bot X)`
+            : (state.humanSide === X ? 'You' : `${CHARACTERS[state.charIdxX].name} (Bot X)`);
+          setStatus(`🎉 ${who} sketched 5 in a row and won!`, 'win-x');
+        } else if (state.winner === O) {
+          const who = state.mode === 'ai-ai'
+            ? `${CHARACTERS[state.charIdxO].name} (Bot O)`
+            : (state.humanSide === O ? 'You' : `${CHARACTERS[state.charIdxO].name} (Bot O)`);
+          setStatus(`🎉 ${who} sketched 5 in a row and won!`, 'win-o');
+        } else {
+          setStatus(`🤝 All 81 squares sketched — it's a Draw!`);
+        }
+        return;
+      }
+
+      if (state.mode === 'ai-ai') {
+        const activeName = state.turn === X ? CHARACTERS[state.charIdxX].name : CHARACTERS[state.charIdxO].name;
+        const sym = state.turn === X ? 'X' : 'O';
+        if (state.aiPaused) {
+          setStatus(`Paused — ${activeName} (${sym}) is waiting for your cue.`);
+        } else {
+          setStatus(`${activeName} (${sym}) is sketching a move...`);
+        }
+      } else {
+        if (state.turn === state.humanSide) {
+          const sym = state.humanSide === X ? 'X' : 'O';
+          setStatus(`Your turn! Sketch an ${sym} on the 9×9 grid.`);
+        } else {
+          const botName = state.turn === X ? CHARACTERS[state.charIdxX].name : CHARACTERS[state.charIdxO].name;
+          setStatus(`${botName} is scheming...`);
+        }
+      }
+    }
+
+    function updateControls() {
+      // Mode buttons
+      els.modeHumanAi.classList.toggle('active', state.mode === 'human-ai');
+      els.modeHumanAi.setAttribute('aria-selected', state.mode === 'human-ai');
+      els.modeAiAi.classList.toggle('active', state.mode === 'ai-ai');
+      els.modeAiAi.setAttribute('aria-selected', state.mode === 'ai-ai');
+
+      // Panels
+      els.humanSettings.classList.toggle('hidden', state.mode !== 'human-ai');
+      els.aiAiSettings.classList.toggle('hidden', state.mode !== 'ai-ai');
+      els.aiPauseBtn.classList.toggle('hidden', state.mode !== 'ai-ai');
+      els.aiStepBtn.classList.toggle('hidden', state.mode !== 'ai-ai');
+
+      // Pause/Resume button text
+      if (state.mode === 'ai-ai') {
+        els.aiPauseBtn.textContent = state.aiPaused ? '▶ Resume Bots' : '⏸ Pause Bots';
+        els.aiPauseBtn.disabled = state.gameOver;
+        els.aiStepBtn.disabled = state.gameOver || !state.aiPaused;
+      }
+
+      // Undo availability
+      let canUndo = false;
+      if (state.mode === 'ai-ai') {
+        canUndo = state.history.length > 0;
+      } else {
+        // In Human vs AI, allow undo if human has made at least one move
+        canUndo = state.history.some(m => m.player === state.humanSide);
+      }
+      els.undoBtn.disabled = !canUndo;
+
+      // Play-as pills
+      els.playAsX.className = `mini-pill ${state.humanSide === X ? 'active-blue' : ''}`;
+      els.playAsO.className = `mini-pill ${state.humanSide === O ? 'active-green' : ''}`;
+    }
+
+    function renderMuteButton() {
+      const muted = SoundFX.isMuted();
+      els.muteText.textContent = muted ? 'Muted' : 'Sound On';
+      els.muteIcon.innerHTML = muted
+        ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>`
+        : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9.5 9.5 0 0 1 0 14"/></svg>`;
+    }
+
+        function updateStatsUI(stats, player) {
+      if (!stats) return;
+      const elAlgo = document.getElementById('statAlgo');
+      const elNodes = document.getElementById('statNodes');
+      const elCutoffs = document.getElementById('statCutoffs');
+      const elTime = document.getElementById('statTime');
+
+      const sideName = player === X ? 'Bot X' : 'Bot O';
+      const sideColor = player === X ? 'var(--blue)' : 'var(--green)';
+
+      if (elAlgo) {
+        elAlgo.innerHTML = `<span style="color:${sideColor};">[${sideName}]</span> ${stats.algorithm || 'AlphaBetaAgent'}`;
+      }
+      if (elNodes) elNodes.textContent = (stats.nodes_visited || 0).toLocaleString();
+      if (elCutoffs) elCutoffs.textContent = (stats.cutoffs || 0).toLocaleString();
+      if (elTime) elTime.textContent = (stats.elapsed_seconds || 0).toFixed(4) + 's';
+    }
+
+    /* =========================================================================
+       6. GAMEPLAY ACTIONS
+       ========================================================================= */
+    function cancelPendingAI() {
+      if (state.aiTimer) {
+        clearTimeout(state.aiTimer);
+        state.aiTimer = null;
+      }
+      state.sessionId++;
+    }
+
+    function resetBoard(keepAutoStart = true) {
+      cancelPendingAI();
+      state.board = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
+      state.history = [];
+      state.turn = X;
+      state.gameOver = false;
+      state.winner = 0;
+      state.winCells = null;
+      if (state.mode === 'ai-ai' && keepAutoStart) {
+        state.aiPaused = false;
+      }
+
+      renderBoard(false);
+      renderAvatarsAndCards();
+      updateControls();
+      updateDefaultStatus();
+      scheduleNextAIIfNeeded();
+    }
+
+    function placePiece(r, c) {
+      if (state.gameOver || state.board[r][c] !== EMPTY) return false;
+
+      const player = state.turn;
+      const variant = (r * 7 + c * 3 + state.history.length) % 4;
+      state.board[r][c] = player;
+      state.history.push({ r, c, player, variant });
+
+      if (player === X) SoundFX.playX();
+      else SoundFX.playO();
+
+      // Check Vietnamese Caro rule
+      const result = checkVietnameseWin(state.board, r, c);
+      if (result.winner) {
+        state.gameOver = true;
+        state.winner = result.winner;
+        state.winCells = result.cells;
+        state.scores[result.winner]++;
+        SoundFX.playWin();
+      } else if (state.history.length === SIZE * SIZE) {
+        state.gameOver = true;
+        state.winner = 0;
+        state.winCells = null;
+        SoundFX.playDraw();
+      } else {
+        state.turn = player === X ? O : X;
+      }
+
+      renderBoard(true);
+      renderAvatarsAndCards();
+      updateControls();
+
+      if (!state.gameOver && result.doubleBlockedFound) {
+        SoundFX.playBlockedNote();
+        setStatus(`Whoa! 5 in a row is blocked on both ends — doesn't count in Vietnamese Caro!`, 'blocked-note');
+      } else {
+        updateDefaultStatus();
+      }
+
+      return true;
+    }
+
+    function handleCellClick(r, c) {
+      if (!isHumanTurn()) return;
+      if (state.board[r][c] !== EMPTY) return;
+
+      const placed = placePiece(r, c);
+      if (placed && !state.gameOver) {
+        scheduleNextAIIfNeeded();
+      }
+    }
+
+    function scheduleNextAIIfNeeded(singleStep = false) {
+      if (state.gameOver) return;
+
+      const isAiTurn = state.mode === 'ai-ai' || state.turn !== state.humanSide;
+      if (!isAiTurn) return;
+      if (state.mode === 'ai-ai' && state.aiPaused && !singleStep) return;
+
+      cancelPendingAI();
+      const mySession = state.sessionId;
+      const delay = state.mode === 'ai-ai' ? (singleStep ? 80 : state.aiSpeed) : 340;
+
+      state.aiTimer = setTimeout(async () => {
+        if (mySession !== state.sessionId || state.gameOver) return;
+
+        let diff = state.difficulty;
+        if (state.mode === 'ai-ai') {
+          diff = state.turn === X ? state.botXDiff : state.botODiff;
+        }
+
+        let move = null;
+        try {
+          const pyPlayer = (state.turn === X) ? 1 : -1;
+          const pyBoard = state.board.map(row => row.map(cell => (cell === O ? -1 : cell)));
+          let algo = state.algorithm || 'alpha-beta';
+          let depth = state.depth || 2;
+          if (state.mode === 'ai-ai') {
+            algo = (state.turn === X) ? state.botXAlgo : state.botOAlgo;
+            depth = (state.turn === X) ? state.botXDepth : state.botODepth;
+          }
+          const res = await fetch('/api/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              board: pyBoard,
+              player: pyPlayer,
+              algorithm: algo,
+              depth: depth,
+              max_candidates: 12
+            })
+          });
+          const data = await res.json();
+          if (data.success && data.move) {
+            move = { r: data.move[0], c: data.move[1] };
+            if (data.stats) updateStatsUI(data.stats, state.turn);
+          }
+        } catch (err) {
+          console.warn('Python server not responding, using fallback JS AI', err);
+          let diff = 'medium';
+          move = CaroAI.chooseMove(state.board, state.turn, diff);
+        }
+
+        if (mySession !== state.sessionId || !move) return;
+
+        placePiece(move.r, move.c);
+
+        if (!state.gameOver && state.mode === 'ai-ai' && !state.aiPaused && !singleStep) {
+          scheduleNextAIIfNeeded(false);
+        }
+      }, delay);
+    }
+
+    function handleUndo() {
+      cancelPendingAI();
+      if (state.history.length === 0) return;
+
+      // If undoing a finished winning board, subtract that win from scoreboard cleanly
+      if (state.gameOver && state.winner) {
+        state.scores[state.winner] = Math.max(0, state.scores[state.winner] - 1);
+      }
+
+      const popOne = () => {
+        const last = state.history.pop();
+        if (last) {
+          state.board[last.r][last.c] = EMPTY;
+          state.turn = last.player;
+        }
+      };
+
+      if (state.mode === 'ai-ai') {
+        state.aiPaused = true;
+        popOne();
+      } else {
+        // Human vs AI: rewind back to Human's previous move
+        if (!state.history.some(m => m.player === state.humanSide)) return;
+
+        if (state.gameOver) {
+          // If AI won, undo AI's winning move AND human's move before it.
+          // If Human won, undo just Human's winning move.
+          const lastPlayer = state.history[state.history.length - 1].player;
+          popOne();
+          if (lastPlayer !== state.humanSide && state.history.length > 0) {
+            popOne();
+          }
+        } else if (state.turn === state.humanSide) {
+          // Undo AI's last reply + Human's move before it
+          popOne();
+          if (state.history.length > 0 && state.history[state.history.length - 1].player === state.humanSide) {
+            popOne();
+          }
+        } else {
+          // AI was thinking right after Human moved: just undo Human's move
+          popOne();
+        }
+      }
+
+      state.gameOver = false;
+      state.winner = 0;
+      state.winCells = null;
+
+      SoundFX.playUndo();
+      renderBoard(false);
+      renderAvatarsAndCards();
+      updateControls();
+      updateDefaultStatus();
+    }
+
+        function updateStatsUI(stats, player) {
+      if (!stats) return;
+      const elAlgo = document.getElementById('statAlgo');
+      const elNodes = document.getElementById('statNodes');
+      const elCutoffs = document.getElementById('statCutoffs');
+      const elTime = document.getElementById('statTime');
+
+      const sideName = player === X ? 'Bot X' : 'Bot O';
+      const sideColor = player === X ? 'var(--blue)' : 'var(--green)';
+
+      if (elAlgo) {
+        elAlgo.innerHTML = `<span style="color:${sideColor};">[${sideName}]</span> ${stats.algorithm || 'AlphaBetaAgent'}`;
+      }
+      if (elNodes) elNodes.textContent = (stats.nodes_visited || 0).toLocaleString();
+      if (elCutoffs) elCutoffs.textContent = (stats.cutoffs || 0).toLocaleString();
+      if (elTime) elTime.textContent = (stats.elapsed_seconds || 0).toFixed(4) + 's';
+    }
+
+    /* =========================================================================
+       7. EVENT BINDINGS
+       ========================================================================= */
+    els.modeHumanAi.addEventListener('click', () => {
+      if (state.mode === 'human-ai') return;
+      SoundFX.playClick();
+      state.mode = 'human-ai';
+      state.scores = { [X]: 0, [O]: 0 };
+      resetBoard();
+    });
+
+    els.modeAiAi.addEventListener('click', () => {
+      if (state.mode === 'ai-ai') return;
+      SoundFX.playClick();
+      state.mode = 'ai-ai';
+      state.aiPaused = false;
+      state.scores = { [X]: 0, [O]: 0 };
+      resetBoard(true);
+    });
+
+    els.muteBtn.addEventListener('click', () => {
+      SoundFX.toggleMute();
+      renderMuteButton();
+      if (!SoundFX.isMuted()) SoundFX.playClick();
+    });
+
+    els.undoBtn.addEventListener('click', handleUndo);
+
+    els.restartBtn.addEventListener('click', () => {
+      SoundFX.playClick();
+      resetBoard(true);
+    });
+
+    els.aiPauseBtn.addEventListener('click', () => {
+      if (state.mode !== 'ai-ai' || state.gameOver) return;
+      SoundFX.playClick();
+      state.aiPaused = !state.aiPaused;
+      if (state.aiPaused) {
+        cancelPendingAI();
+      } else {
+        scheduleNextAIIfNeeded(false);
+      }
+      updateControls();
+      updateDefaultStatus();
+    });
+
+    els.aiStepBtn.addEventListener('click', () => {
+      if (state.mode !== 'ai-ai' || state.gameOver || !state.aiPaused) return;
+      SoundFX.playClick();
+      scheduleNextAIIfNeeded(true);
+    });
+
+    // Play As X / O toggle in Human vs AI
+    els.playAsX.addEventListener('click', () => {
+      if (state.humanSide === X) return;
+      SoundFX.playClick();
+      state.humanSide = X;
+      resetBoard();
+    });
+
+    els.playAsO.addEventListener('click', () => {
+      if (state.humanSide === O) return;
+      SoundFX.playClick();
+      state.humanSide = O;
+      resetBoard();
+    });
+
+    // Difficulty pill helper
+    function wirePillGroup(container, onSelect, activeClass = 'active') {
+      const buttons = Array.from(container.querySelectorAll('button'));
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          SoundFX.playClick();
+          buttons.forEach(b => b.classList.remove('active', 'active-blue', 'active-green'));
+          btn.classList.add(activeClass);
+          onSelect(btn);
+        });
+      });
+    }
+
+    const algoPills = document.getElementById('algoPills');
+    if (algoPills) {
+      wirePillGroup(algoPills, btn => {
+        state.algorithm = btn.dataset.algo;
+      }, 'active');
+    }
+
+    const depthPills = document.getElementById('depthPills');
+    if (depthPills) {
+      wirePillGroup(depthPills, btn => {
+        state.depth = Number(btn.dataset.depth);
+      }, 'active');
+    }
+
+    const botXAlgoPills = document.getElementById('botXAlgoPills');
+    if (botXAlgoPills) {
+      wirePillGroup(botXAlgoPills, btn => {
+        state.botXAlgo = btn.dataset.algo;
+        renderAvatarsAndCards();
+      }, 'active-blue');
+    }
+
+    const botOAlgoPills = document.getElementById('botOAlgoPills');
+    if (botOAlgoPills) {
+      wirePillGroup(botOAlgoPills, btn => {
+        state.botOAlgo = btn.dataset.algo;
+        renderAvatarsAndCards();
+      }, 'active-green');
+    }
+
+    const botXDepthPills = document.getElementById('botXDepthPills');
+    if (botXDepthPills) {
+      wirePillGroup(botXDepthPills, btn => {
+        state.botXDepth = Number(btn.dataset.depth);
+        renderAvatarsAndCards();
+      }, 'active-blue');
+    }
+
+    const botODepthPills = document.getElementById('botODepthPills');
+    if (botODepthPills) {
+      wirePillGroup(botODepthPills, btn => {
+        state.botODepth = Number(btn.dataset.depth);
+        renderAvatarsAndCards();
+      }, 'active-green');
+    }
+
+    wirePillGroup(els.speedPills, btn => {
+      state.aiSpeed = Number(btn.dataset.speed);
+    }, 'active');
+
+    // Cycle hand-drawn characters
+    function cycleCharacter(team) {
+      SoundFX.playClick();
+      if (team === X) {
+        state.charIdxX = (state.charIdxX + 1) % CHARACTERS.length;
+        if (state.charIdxX === state.charIdxO) {
+          state.charIdxX = (state.charIdxX + 1) % CHARACTERS.length;
+        }
+      } else {
+        state.charIdxO = (state.charIdxO + 1) % CHARACTERS.length;
+        if (state.charIdxO === state.charIdxX) {
+          state.charIdxO = (state.charIdxO + 1) % CHARACTERS.length;
+        }
+      }
+      renderAvatarsAndCards();
+      updateDefaultStatus();
+    }
+
+    els.cycleX.addEventListener('click', () => cycleCharacter(X));
+    els.avatarStageX.addEventListener('click', () => cycleCharacter(X));
+    els.cycleO.addEventListener('click', () => cycleCharacter(O));
+    els.avatarStageO.addEventListener('click', () => cycleCharacter(O));
+
+        function updateStatsUI(stats, player) {
+      if (!stats) return;
+      const elAlgo = document.getElementById('statAlgo');
+      const elNodes = document.getElementById('statNodes');
+      const elCutoffs = document.getElementById('statCutoffs');
+      const elTime = document.getElementById('statTime');
+
+      const sideName = player === X ? 'Bot X' : 'Bot O';
+      const sideColor = player === X ? 'var(--blue)' : 'var(--green)';
+
+      if (elAlgo) {
+        elAlgo.innerHTML = `<span style="color:${sideColor};">[${sideName}]</span> ${stats.algorithm || 'AlphaBetaAgent'}`;
+      }
+      if (elNodes) elNodes.textContent = (stats.nodes_visited || 0).toLocaleString();
+      if (elCutoffs) elCutoffs.textContent = (stats.cutoffs || 0).toLocaleString();
+      if (elTime) elTime.textContent = (stats.elapsed_seconds || 0).toFixed(4) + 's';
+    }
+
+    /* =========================================================================
+       8. BOOTSTRAP
+       ========================================================================= */
+    renderHandDrawnGrid();
+    initBoardDOM();
+    renderMuteButton();
+    resetBoard();
+  </script>
+</body>
+</html>
