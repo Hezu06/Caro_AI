@@ -3,7 +3,7 @@ name = "caro-ai"
 version = "0.1.0"
 description = "Bài tập lớn Trí tuệ Nhân tạo - Game Caro AI 9x9 với MiniMax Alpha-Beta và MCTS UCT"
 readme = "README.md"
-requires-python = "==3.11.9"
+requires-python = ">=3.10, <3.13"
 dependencies = [
     "customtkinter==5.2.2",
     "matplotlib==3.8.4",
