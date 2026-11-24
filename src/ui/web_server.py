@@ -21,6 +21,14 @@ class CaroWebHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WEB_DIR, **kwargs)
 
+    def do_GET(self):
+        # Tránh lỗi 404 và spam log khi trình duyệt tự động hỏi favicon.ico
+        if self.path in ("/favicon.ico", "/favicon.png"):
+            self.send_response(204)
+            self.end_headers()
+            return
+        super().do_GET()
+
     def do_POST(self):
         parsed_url = urlparse(self.path)
         if parsed_url.path == "/api/move":
@@ -76,9 +84,10 @@ class CaroWebHandler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def log_message(self, format, *args):
-        # Ẩn log GET tĩnh để terminal gọn gàng, chỉ in khi cần
-        if "POST /api/move" in args[0]:
-            print(f"[Caro Web Server] {args[0]} - Status {args[1]}")
+        # Ẩn log GET tĩnh để terminal gọn gàng, chỉ in khi gọi API
+        if args and isinstance(args[0], str) and "POST /api/move" in args[0]:
+            status = args[1] if len(args) > 1 else ""
+            print(f"[Caro Web Server] {args[0]} - Status {status}")
 
 
 def find_free_port(start_port: int = 8080) -> int:

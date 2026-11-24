@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from math import inf
+import random
+from math import inf, isclose
 from time import perf_counter
 from typing import Callable
 
@@ -21,6 +22,7 @@ class MinimaxAgent(BaseAgent):
                  max_candidates: int | None = DEFAULT_MAX_CANDIDATES,
                  candidate_radius: int | None = DEFAULT_CANDIDATE_RADIUS,
                  evaluator: Evaluator = evaluate,
+                 random_tie_break: bool = True,
                  logger: logging.Logger | None = None):
         super().__init__()
         if type(depth) is not int or depth < 1:
@@ -32,6 +34,7 @@ class MinimaxAgent(BaseAgent):
         self.max_candidates = max_candidates
         self.candidate_radius = candidate_radius
         self.evaluator = evaluator
+        self.random_tie_break = random_tie_break
         self.logger = logger or logging.getLogger(__name__)
 
     def _moves(self, board: BoardState, player: int) -> list[Move]:
@@ -67,14 +70,21 @@ class MinimaxAgent(BaseAgent):
         value = self._leaf(board, self.depth, player)
         if value is not None:
             return None, value
-        best_move, best_value = None, -inf
+        best_moves: list[Move] = []
+        best_value = -inf
         for move in self._moves(board, player):
             child = board.clone()
             child.place(move, player)
             value = self._search(child, self.depth - 1, opponent(player), player, 1)
-            # Strict improvement keeps the first move when scores tie.
-            if value > best_value:
-                best_move, best_value = move, value
+            if value > best_value + 1e-6:
+                best_value = value
+                best_moves = [move]
+            elif abs(value - best_value) <= 1e-6:
+                best_moves.append(move)
+
+        if not best_moves:
+            return None, best_value
+        best_move = random.choice(best_moves) if self.random_tie_break else best_moves[0]
         return best_move, best_value
 
     def _search(self, board: BoardState, remaining: int,

@@ -1,5 +1,6 @@
 """MiniMax with Alpha-Beta; shares configuration, evaluation and statistics."""
 from math import inf
+import random
 
 from src.config import opponent
 from src.core.board import BoardState, Move
@@ -14,16 +15,24 @@ class AlphaBetaAgent(MinimaxAgent):
         leaf = self._leaf(board, self.depth, player)
         if leaf is not None:
             return None, leaf
-        best_move, best_value = None, -inf
+        best_moves: list[Move] = []
+        best_value = -inf
         alpha, beta = -inf, inf
         for move in self._moves(board, player):
             child = board.clone()
             child.place(move, player)
             value = self._search_ab(child, self.depth - 1, opponent(player),
                                     player, 1, alpha, beta)
-            if value > best_value:
-                best_move, best_value = move, value
+            if value > best_value + 1e-6:
+                best_value = value
+                best_moves = [move]
+            elif abs(value - best_value) <= 1e-6:
+                best_moves.append(move)
             alpha = max(alpha, best_value)
+
+        if not best_moves:
+            return None, best_value
+        best_move = random.choice(best_moves) if self.random_tie_break else best_moves[0]
         return best_move, best_value
 
     def _search_ab(self, board: BoardState, remaining: int, to_move: int,
