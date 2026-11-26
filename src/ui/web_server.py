@@ -22,6 +22,19 @@ class CaroWebHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WEB_DIR, **kwargs)
 
+    def do_GET(self):
+        """Override để xử lý favicon và thêm no-cache headers."""
+        if self.path == "/favicon.ico":
+            self.send_response(204)
+            self.end_headers()
+            return
+        # Thêm Cache-Control để tránh browser cache file cũ
+        super().do_GET()
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        super().end_headers()
+
     def do_POST(self):
         parsed_url = urlparse(self.path)
         if parsed_url.path == "/api/move":
@@ -49,7 +62,11 @@ class CaroWebHandler(SimpleHTTPRequestHandler):
                 elif algorithm == "random":
                     agent = RandomAgent()
                 elif algorithm == "mcts":
-                    agent = MCTSAgent(iterations=300)
+                    iterations = data.get("iterations", 300)
+                    exploration = data.get("exploration", 0.65)
+                    if type(exploration) not in (int, float):
+                        raise ValueError("exploration must be a finite non-negative number")
+                    agent = MCTSAgent(iterations=iterations, exploration=exploration)
                 else:
                     agent = AlphaBetaAgent(depth=depth, max_candidates=max_cand)
 
@@ -80,7 +97,7 @@ class CaroWebHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         # Ẩn log GET tĩnh để terminal gọn gàng, chỉ in khi cần
-        if "POST /api/move" in args[0]:
+        if args and isinstance(args[0], str) and "POST /api/move" in args[0]:
             print(f"[Caro Web Server] {args[0]} - Status {args[1]}")
 
 

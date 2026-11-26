@@ -703,6 +703,28 @@
       transform: translateY(-1px);
     }
 
+    .mcts-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .mcts-options input {
+      width: 100%;
+      margin-top: 4px;
+      padding: 6px 8px;
+      border: 2.3px solid var(--ink);
+      border-radius: 11px;
+      background: var(--cream);
+      color: var(--ink);
+      font: inherit;
+    }
+
+    .mcts-options button {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+
     .mini-pill.active {
       background: var(--ink);
       color: var(--cream);
@@ -1043,6 +1065,20 @@
             Match Settings
           </h2>
 
+          <template id="mctsOptionsTemplate">
+            <form class="mcts-options">
+              <label>
+                Exploration (C)
+                <input name="exploration" type="number" min="0" step="any" required>
+              </label>
+              <label>
+                Iterations (I)
+                <input name="iterations" type="number" min="1" step="1" required>
+              </label>
+              <button class="mini-pill" type="submit">Apply MCTS settings</button>
+            </form>
+          </template>
+
           <!-- Human vs AI specific controls -->
           <div id="humanSettings">
             <div class="setting-group">
@@ -1072,6 +1108,7 @@
                 <button class="mini-pill" data-depth="4" type="button">d = 4</button>
               </div>
             </div>
+            <div id="humanMctsOptions" class="setting-group hidden"></div>
           </div>
 
           <!-- AI vs AI specific controls -->
@@ -1095,6 +1132,7 @@
                 <button class="mini-pill" data-depth="4" type="button">d = 4</button>
               </div>
             </div>
+            <div id="botXMctsOptions" class="setting-group hidden"></div>
 
             <div class="setting-group" style="margin-top:10px;padding-top:8px;border-top:1.5px dashed var(--ink);">
               <span class="setting-label">Bot O (Green) Algorithm</span>
@@ -1115,6 +1153,7 @@
                 <button class="mini-pill" data-depth="4" type="button">d = 4</button>
               </div>
             </div>
+            <div id="botOMctsOptions" class="setting-group hidden"></div>
 
             <div class="setting-group" style="margin-top:10px;padding-top:8px;border-top:1.5px dashed var(--ink);">
               <span class="setting-label">Watch Speed</span>
@@ -2079,6 +2118,7 @@
     /* =========================================================================
        5. APPLICATION STATE & UI CONTROLLER
        ========================================================================= */
+    const defaultMctsOptions = { exploration: 0.65, iterations: 300 };
     const state = {
       mode: 'human-ai',     // 'human-ai' | 'ai-ai'
       humanSide: X,         // X or O (only used in human-ai)
@@ -2088,6 +2128,11 @@
       botOAlgo: 'alpha-beta',
       botXDepth: 2,
       botODepth: 2,
+      mctsOptions: {
+        human: { ...defaultMctsOptions },
+        x: { ...defaultMctsOptions },
+        o: { ...defaultMctsOptions }
+      },
       aiSpeed: 520,         // ms delay in AI vs AI
       aiPaused: false,
 
@@ -2143,6 +2188,36 @@
       speedPills: document.getElementById('speedPills'),
       moveCountText: document.getElementById('moveCountText')
     };
+
+    const mctsPanels = {
+      human: document.getElementById('humanMctsOptions'),
+      x: document.getElementById('botXMctsOptions'),
+      o: document.getElementById('botOMctsOptions')
+    };
+    const mctsTemplate = document.getElementById('mctsOptionsTemplate');
+    for (const [seat, panel] of Object.entries(mctsPanels)) {
+      const form = mctsTemplate.content.firstElementChild.cloneNode(true);
+      const exploration = form.elements.namedItem('exploration');
+      const iterations = form.elements.namedItem('iterations');
+      exploration.value = state.mctsOptions[seat].exploration;
+      iterations.value = state.mctsOptions[seat].iterations;
+
+      iterations.addEventListener('input', () => iterations.setCustomValidity(''));
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        if (!Number.isSafeInteger(iterations.valueAsNumber)) {
+          iterations.setCustomValidity('Enter a positive integer that can be represented exactly.');
+          iterations.reportValidity();
+          return;
+        }
+        state.mctsOptions[seat] = {
+          exploration: exploration.valueAsNumber,
+          iterations: iterations.valueAsNumber
+        };
+        renderAvatarsAndCards();
+      });
+      panel.appendChild(form);
+    }
 
     /* ---------- BUILD ORGANIC HAND-DRAWN 9x9 GRID SVG ---------- */
     function renderHandDrawnGrid() {
@@ -2315,18 +2390,21 @@
       const xIsAI = state.mode === 'ai-ai' || state.humanSide !== X;
       const oIsAI = state.mode === 'ai-ai' || state.humanSide !== O;
 
-      function formatAlgo(algo, depth) {
+      function formatAlgo(algo, depth, mctsOptions) {
         if (algo === 'alpha-beta') return `Alpha-Beta (d=${depth})`;
         if (algo === 'minimax') return `MiniMax (d=${depth})`;
-        if (algo === 'mcts') return 'MCTS (UCT)';
+        if (algo === 'mcts') {
+          return `MCTS (C=${mctsOptions.exploration}, I=${mctsOptions.iterations})`;
+        }
         return 'RandomBot';
       }
       if (state.mode === 'ai-ai') {
-        els.roleLabelX.textContent = `Bot X: ${formatAlgo(state.botXAlgo, state.botXDepth)}`;
-        els.roleLabelO.textContent = `Bot O: ${formatAlgo(state.botOAlgo, state.botODepth)}`;
+        els.roleLabelX.textContent = `Bot X: ${formatAlgo(state.botXAlgo, state.botXDepth, state.mctsOptions.x)}`;
+        els.roleLabelO.textContent = `Bot O: ${formatAlgo(state.botOAlgo, state.botODepth, state.mctsOptions.o)}`;
       } else {
-        els.roleLabelX.textContent = state.humanSide === X ? 'You (X)' : `Bot X: ${formatAlgo(state.algorithm, state.depth)}`;
-        els.roleLabelO.textContent = state.humanSide === O ? 'You (O)' : `Bot O: ${formatAlgo(state.algorithm, state.depth)}`;
+        const algoLabel = formatAlgo(state.algorithm, state.depth, state.mctsOptions.human);
+        els.roleLabelX.textContent = state.humanSide === X ? 'You (X)' : `Bot X: ${algoLabel}`;
+        els.roleLabelO.textContent = state.humanSide === O ? 'You (O)' : `Bot O: ${algoLabel}`;
       }
 
       els.cardX.classList.toggle('is-ai', xIsAI);
@@ -2396,6 +2474,9 @@
       document.getElementById('depthPills').parentElement.classList.toggle('hidden', state.algorithm === 'mcts');
       document.getElementById('botXDepthPills').parentElement.classList.toggle('hidden', state.botXAlgo === 'mcts');
       document.getElementById('botODepthPills').parentElement.classList.toggle('hidden', state.botOAlgo === 'mcts');
+      mctsPanels.human.classList.toggle('hidden', state.algorithm !== 'mcts');
+      mctsPanels.x.classList.toggle('hidden', state.botXAlgo !== 'mcts');
+      mctsPanels.o.classList.toggle('hidden', state.botOAlgo !== 'mcts');
 
       // Pause/Resume button text
       if (state.mode === 'ai-ai') {
@@ -2543,8 +2624,10 @@
 
         const player = state.turn;
         const isBotMatch = state.mode === 'ai-ai';
+        const seat = isBotMatch ? (player === X ? 'x' : 'o') : 'human';
         const algo = isBotMatch ? (player === X ? state.botXAlgo : state.botOAlgo) : state.algorithm;
         const depth = isBotMatch ? (player === X ? state.botXDepth : state.botODepth) : state.depth;
+        const options = algo === 'mcts' ? state.mctsOptions[seat] : { depth, max_candidates: 20 };
 
         let move = null;
         try {
@@ -2557,8 +2640,7 @@
               board: pyBoard,
               player: pyPlayer,
               algorithm: algo,
-              depth: depth,
-              max_candidates: 20
+              ...options
             })
           });
           const data = await res.json();
