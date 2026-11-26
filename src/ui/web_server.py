@@ -62,7 +62,11 @@ class CaroWebHandler(SimpleHTTPRequestHandler):
                 elif algorithm == "random":
                     agent = RandomAgent()
                 elif algorithm == "mcts":
-                    agent = MCTSAgent(iterations=300)
+                    iterations = data.get("iterations", 300)
+                    exploration = data.get("exploration", 0.65)
+                    if type(exploration) not in (int, float):
+                        raise ValueError("exploration must be a finite non-negative number")
+                    agent = MCTSAgent(iterations=iterations, exploration=exploration)
                 else:
                     agent = AlphaBetaAgent(depth=depth, max_candidates=max_cand)
 
