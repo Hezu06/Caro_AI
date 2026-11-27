@@ -6,6 +6,9 @@ Kết nối giao diện web với AlphaBetaAgent, MinimaxAgent, RandomAgent và 
 import os
 import json
 import socket
+from datetime import datetime, timezone
+from pathlib import Path
+from uuid import uuid4
 import webbrowser
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
@@ -16,6 +19,7 @@ from src.agents import AlphaBetaAgent, MinimaxAgent, RandomAgent
 from src.agents.mcts_agent import MCTSAgent
 
 WEB_DIR = os.path.join(os.path.dirname(__file__), "web")
+LOG_DIR = Path(__file__).resolve().parents[2] / "logs"
 
 
 class CaroWebHandler(SimpleHTTPRequestHandler):
@@ -37,6 +41,24 @@ class CaroWebHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed_url = urlparse(self.path)
+        if parsed_url.path == "/api/save-game":
+            try:
+                content_length = int(self.headers.get("Content-Length", 0))
+                data = json.loads(self.rfile.read(content_length).decode("utf-8"))
+                if not isinstance(data, dict) or not data.get("moves") or not data.get("result"):
+                    raise ValueError("A completed game with moves and result is required")
+                game_id = f"{datetime.now(timezone.utc):%Y%m%dT%H%M%S}_{uuid4().hex[:8]}"
+                data.update({"schema_version": 1, "game_id": game_id,
+                             "saved_at": datetime.now(timezone.utc).isoformat()})
+                LOG_DIR.mkdir(parents=True, exist_ok=True)
+                path = LOG_DIR / f"{game_id}.json"
+                path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                self._send_json({"success": True, "game_id": game_id}, 201)
+            except (ValueError, json.JSONDecodeError) as e:
+                self._send_json({"success": False, "error": str(e)}, 400)
+            except OSError as e:
+                self._send_json({"success": False, "error": f"Could not save game log: {e}"}, 500)
+            return
         if parsed_url.path == "/api/move":
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length)

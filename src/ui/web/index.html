@@ -2139,6 +2139,8 @@
       board: [],
       turn: X,
       history: [],          // [{ r, c, player, variant }]
+      startedAt: null,
+      gameSaved: false,
       gameOver: false,
       winner: 0,
       winCells: null,
@@ -2541,6 +2543,8 @@
       cancelPendingAI();
       state.board = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
       state.history = [];
+      state.startedAt = new Date();
+      state.gameSaved = false;
       state.turn = X;
       state.gameOver = false;
       state.winner = 0;
@@ -2556,13 +2560,77 @@
       scheduleNextAIIfNeeded();
     }
 
-    function placePiece(r, c) {
+    function getPlayerConfig(player) {
+      const isX = player === X;
+      if (state.mode === 'ai-ai') {
+        const algorithm = isX ? state.botXAlgo : state.botOAlgo;
+        const depth = isX ? state.botXDepth : state.botODepth;
+        const config = algorithm === 'mcts'
+          ? { iterations: 300, max_candidates: 10, rollout_depth: 4 }
+          : ['alpha-beta', 'minimax'].includes(algorithm)
+            ? { depth, max_candidates: 20, candidate_radius: 2 } : {};
+        return { agent: algorithm, config };
+      }
+      if (player === state.humanSide) return { agent: 'Human', config: {} };
+      const config = state.algorithm === 'mcts'
+        ? { iterations: 300, max_candidates: 10, rollout_depth: 4 }
+        : ['alpha-beta', 'minimax'].includes(state.algorithm)
+          ? { depth: state.depth, max_candidates: 20, candidate_radius: 2 } : {};
+      return { agent: state.algorithm, config };
+    }
+
+    function saveCompletedGame() {
+      if (state.gameSaved || !state.gameOver) return;
+      state.gameSaved = true;
+      const players = { X: getPlayerConfig(X), O: getPlayerConfig(O) };
+      const summaries = {};
+      for (const [symbol, player] of [['X', X], ['O', O]]) {
+        const turns = state.history.filter(move => move.player === player);
+        const timed = turns.map(move => move.stats?.elapsed_seconds).filter(Number.isFinite);
+        summaries[symbol] = {
+          moves: turns.length,
+          total_thinking_seconds: timed.reduce((sum, value) => sum + value, 0),
+          average_thinking_seconds: timed.length ? timed.reduce((sum, value) => sum + value, 0) / timed.length : null,
+          total_nodes: turns.some(move => Number.isFinite(move.stats?.nodes_visited))
+            ? turns.reduce((sum, move) => sum + (move.stats?.nodes_visited || 0), 0) : null,
+          total_cutoffs: turns.some(move => Number.isFinite(move.stats?.cutoffs))
+            ? turns.reduce((sum, move) => sum + (move.stats?.cutoffs || 0), 0) : null
+        };
+      }
+      const endedAt = new Date();
+      fetch('/api/save-game', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          started_at: state.startedAt.toISOString(), ended_at: endedAt.toISOString(),
+          duration_seconds: (endedAt - state.startedAt) / 1000,
+          board: { size: SIZE, win_length: 5 }, mode: state.mode, players,
+          moves: state.history.map((move, index) => ({
+            ply: index + 1, player: move.player === X ? 'X' : 'O',
+            move: [move.r, move.c], ...(move.agentInfo || getPlayerConfig(move.player)),
+            stats: move.stats || null
+          })),
+          result: { winner: state.winner === X ? 'X' : state.winner === O ? 'O' : null,
+            reason: state.winner ? 'five_in_a_row' : 'board_full' },
+          summary: summaries
+        })
+      }).then(async response => {
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.error || 'save failed');
+        console.info(`Saved completed game log: logs/${data.game_id}.json`);
+      }).catch(error => {
+        state.gameSaved = false;
+        console.error('Could not save completed game log', error);
+      });
+    }
+
+    function placePiece(r, c, stats = null, agentInfo = null) {
       if (state.gameOver || state.board[r][c] !== EMPTY) return false;
 
       const player = state.turn;
       const variant = (r * 7 + c * 3 + state.history.length) % 4;
       state.board[r][c] = player;
-      state.history.push({ r, c, player, variant });
+      state.history.push({ r, c, player, variant, stats,
+        agentInfo: agentInfo || getPlayerConfig(player) });
 
       if (player === X) SoundFX.playX();
       else SoundFX.playO();
@@ -2594,6 +2662,8 @@
       } else {
         updateDefaultStatus();
       }
+
+      if (state.gameOver) saveCompletedGame();
 
       return true;
     }
@@ -2630,6 +2700,8 @@
         const options = algo === 'mcts' ? state.mctsOptions[seat] : { depth, max_candidates: 20 };
 
         let move = null;
+        let moveStats = null;
+        let moveAgent = getPlayerConfig(player);
         try {
           const pyPlayer = (player === X) ? 1 : -1;
           const pyBoard = state.board.map(row => row.map(cell => (cell === O ? -1 : cell)));
@@ -2652,6 +2724,7 @@
           }
           if (data.success && data.move) {
             move = { r: data.move[0], c: data.move[1] };
+            moveStats = data.stats || null;
             if (data.stats) updateStatsUI(data.stats, player);
           }
         } catch (err) {
@@ -2663,11 +2736,12 @@
           }
           console.warn('Python server not responding, using fallback JS AI', err);
           move = CaroAI.chooseMove(state.board, player, 'medium');
+          moveAgent = { agent: 'JavaScriptFallback', config: { difficulty: 'medium' } };
         }
 
         if (mySession !== state.sessionId || !move) return;
 
-        placePiece(move.r, move.c);
+        placePiece(move.r, move.c, moveStats, moveAgent);
 
         if (!state.gameOver && state.mode === 'ai-ai' && !state.aiPaused && !singleStep) {
           scheduleNextAIIfNeeded(false);

@@ -1,0 +1,295 @@
+{
+  "started_at": "2026-11-26T03:49:43.551298+00:00",
+  "ended_at": "2026-11-26T03:49:43.882186+00:00",
+  "duration_seconds": 0.330888,
+  "board": {
+    "size": 9,
+    "win_length": 5
+  },
+  "mode": "ai-ai",
+  "players": {
+    "X": {
+      "agent": "alpha-beta",
+      "config": {
+        "depth": 2,
+        "max_candidates": 20,
+        "candidate_radius": 2
+      }
+    },
+    "O": {
+      "agent": "random",
+      "config": {
+        "seed": 11
+      }
+    }
+  },
+  "moves": [
+    {
+      "ply": 1,
+      "player": "X",
+      "move": [
+        4,
+        4
+      ],
+      "agent": "alpha-beta",
+      "config": {
+        "depth": 2,
+        "max_candidates": 20,
+        "candidate_radius": 2
+      },
+      "stats": {
+        "algorithm": "AlphaBetaAgent",
+        "selected_move": [
+          4,
+          4
+        ],
+        "depth": 2,
+        "depth_reached": 2,
+        "elapsed_seconds": 0.02923129999999219,
+        "nodes_visited": 60,
+        "leaf_nodes": 39,
+        "cutoffs": 19,
+        "score": 3.099999999999998
+      }
+    },
+    {
+      "ply": 2,
+      "player": "O",
+      "move": [
+        6,
+        4
+      ],
+      "agent": "random",
+      "config": {
+        "seed": 11
+      },
+      "stats": {
+        "algorithm": "RandomAgent",
+        "selected_move": [
+          6,
+          4
+        ],
+        "depth": 0,
+        "depth_reached": 0,
+        "elapsed_seconds": 1.810000048863003e-05,
+        "nodes_visited": 0,
+        "leaf_nodes": 0,
+        "cutoffs": 0,
+        "score": null
+      }
+    },
+    {
+      "ply": 3,
+      "player": "X",
+      "move": [
+        5,
+        5
+      ],
+      "agent": "alpha-beta",
+      "config": {
+        "depth": 2,
+        "max_candidates": 20,
+        "candidate_radius": 2
+      },
+      "stats": {
+        "algorithm": "AlphaBetaAgent",
+        "selected_move": [
+          5,
+          5
+        ],
+        "depth": 2,
+        "depth_reached": 2,
+        "elapsed_seconds": 0.06582830000024842,
+        "nodes_visited": 121,
+        "leaf_nodes": 100,
+        "cutoffs": 18,
+        "score": 2.3999999999999986
+      }
+    },
+    {
+      "ply": 4,
+      "player": "O",
+      "move": [
+        8,
+        2
+      ],
+      "agent": "random",
+      "config": {
+        "seed": 11
+      },
+      "stats": {
+        "algorithm": "RandomAgent",
+        "selected_move": [
+          8,
+          2
+        ],
+        "depth": 0,
+        "depth_reached": 0,
+        "elapsed_seconds": 1.9799999790848233e-05,
+        "nodes_visited": 0,
+        "leaf_nodes": 0,
+        "cutoffs": 0,
+        "score": null
+      }
+    },
+    {
+      "ply": 5,
+      "player": "X",
+      "move": [
+        6,
+        6
+      ],
+      "agent": "alpha-beta",
+      "config": {
+        "depth": 2,
+        "max_candidates": 20,
+        "candidate_radius": 2
+      },
+      "stats": {
+        "algorithm": "AlphaBetaAgent",
+        "selected_move": [
+          6,
+          6
+        ],
+        "depth": 2,
+        "depth_reached": 2,
+        "elapsed_seconds": 0.0903002999993987,
+        "nodes_visited": 134,
+        "leaf_nodes": 113,
+        "cutoffs": 16,
+        "score": 204.4
+      }
+    },
+    {
+      "ply": 6,
+      "player": "O",
+      "move": [
+        7,
+        0
+      ],
+      "agent": "random",
+      "config": {
+        "seed": 11
+      },
+      "stats": {
+        "algorithm": "RandomAgent",
+        "selected_move": [
+          7,
+          0
+        ],
+        "depth": 0,
+        "depth_reached": 0,
+        "elapsed_seconds": 2.3099999452824704e-05,
+        "nodes_visited": 0,
+        "leaf_nodes": 0,
+        "cutoffs": 0,
+        "score": null
+      }
+    },
+    {
+      "ply": 7,
+      "player": "X",
+      "move": [
+        3,
+        3
+      ],
+      "agent": "alpha-beta",
+      "config": {
+        "depth": 2,
+        "max_candidates": 20,
+        "candidate_radius": 2
+      },
+      "stats": {
+        "algorithm": "AlphaBetaAgent",
+        "selected_move": [
+          3,
+          3
+        ],
+        "depth": 2,
+        "depth_reached": 2,
+        "elapsed_seconds": 0.11932400000023335,
+        "nodes_visited": 195,
+        "leaf_nodes": 174,
+        "cutoffs": 17,
+        "score": 2116.1
+      }
+    },
+    {
+      "ply": 8,
+      "player": "O",
+      "move": [
+        6,
+        8
+      ],
+      "agent": "random",
+      "config": {
+        "seed": 11
+      },
+      "stats": {
+        "algorithm": "RandomAgent",
+        "selected_move": [
+          6,
+          8
+        ],
+        "depth": 0,
+        "depth_reached": 0,
+        "elapsed_seconds": 2.6400000024295878e-05,
+        "nodes_visited": 0,
+        "leaf_nodes": 0,
+        "cutoffs": 0,
+        "score": null
+      }
+    },
+    {
+      "ply": 9,
+      "player": "X",
+      "move": [
+        7,
+        7
+      ],
+      "agent": "alpha-beta",
+      "config": {
+        "depth": 2,
+        "max_candidates": 20,
+        "candidate_radius": 2
+      },
+      "stats": {
+        "algorithm": "AlphaBetaAgent",
+        "selected_move": [
+          7,
+          7
+        ],
+        "depth": 2,
+        "depth_reached": 2,
+        "elapsed_seconds": 0.024591200000031677,
+        "nodes_visited": 39,
+        "leaf_nodes": 20,
+        "cutoffs": 18,
+        "score": 1000000.0
+      }
+    }
+  ],
+  "result": {
+    "winner": "X",
+    "reason": "five_in_a_row"
+  },
+  "summary": {
+    "X": {
+      "moves": 5,
+      "total_thinking_seconds": 0.32927509999990434,
+      "average_thinking_seconds": 0.06585501999998086,
+      "total_nodes": 549,
+      "total_cutoffs": 88
+    },
+    "O": {
+      "moves": 4,
+      "total_thinking_seconds": 8.739999975659885e-05,
+      "average_thinking_seconds": 2.184999993914971e-05,
+      "total_nodes": 0,
+      "total_cutoffs": 0
+    }
+  },
+  "schema_version": 1,
+  "game_id": "20261126T034944_d85a9c02",
+  "saved_at": "2026-11-26T03:49:44.168028+00:00"
+}
