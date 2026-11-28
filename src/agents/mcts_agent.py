@@ -182,6 +182,7 @@ class MCTSAgent(BaseAgent):
         *,
         max_candidates: int = 10,
         rollout_depth: int = 4,
+        root_policy: str = "visits",
     ) -> None:
         super().__init__()
         for name, value in (("iterations", iterations), ("max_candidates", max_candidates),
@@ -190,10 +191,13 @@ class MCTSAgent(BaseAgent):
                 raise ValueError(f"{name} must be a positive integer")
         if not isfinite(exploration) or exploration < 0:
             raise ValueError("exploration must be finite and non-negative")
+        if root_policy not in ("visits", "mean"):
+            raise ValueError("root_policy must be 'visits' or 'mean'")
         self.iterations = iterations
         self.exploration = exploration
         self.max_candidates = max_candidates
         self.rollout_depth = rollout_depth
+        self.root_policy = root_policy
         self.rng = Random(seed)
 
     def get_move(self, board: BoardState, player: int) -> Move | None:
@@ -286,9 +290,15 @@ class MCTSAgent(BaseAgent):
                             if child.solved == 1.0 - root.solved)
                 return best, root.solved
 
-        def rank_child(item: tuple[int, _Node]) -> tuple[bool, int, float]:
+        return self._choose_root_move(root)
+
+    def _choose_root_move(self, root: _Node) -> tuple[int, float]:
+        def rank_child(item: tuple[int, _Node]) -> tuple[bool, float, float]:
             _, child = item
-            return child.solved != 1.0, child.visits, 1.0 - child.value_sum / child.visits
+            mean = 1.0 - child.value_sum / child.visits
+            if self.root_policy == "mean":
+                return child.solved != 1.0, mean, child.visits
+            return child.solved != 1.0, child.visits, mean
 
         move, best = max(root.children.items(), key=rank_child)
         return move, 1.0 - best.value_sum / best.visits

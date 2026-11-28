@@ -88,7 +88,10 @@ class CaroWebHandler(SimpleHTTPRequestHandler):
                     exploration = data.get("exploration", 0.65)
                     if type(exploration) not in (int, float):
                         raise ValueError("exploration must be a finite non-negative number")
-                    agent = MCTSAgent(iterations=iterations, exploration=exploration)
+                    agent = MCTSAgent(
+                        iterations=iterations, exploration=exploration,
+                        root_policy=data.get("root_policy", "visits"),
+                    )
                 else:
                     agent = AlphaBetaAgent(depth=depth, max_candidates=max_cand)
 

@@ -709,7 +709,8 @@
       gap: 6px;
     }
 
-    .mcts-options input {
+    .mcts-options input,
+    .mcts-options select {
       width: 100%;
       margin-top: 4px;
       padding: 6px 8px;
@@ -720,8 +721,12 @@
       font: inherit;
     }
 
-    .mcts-options button {
+    .mcts-options button,
+    .mcts-root-policy {
       grid-column: 1 / -1;
+    }
+
+    .mcts-options button {
       justify-self: start;
     }
 
@@ -1074,6 +1079,13 @@
               <label>
                 Iterations (I)
                 <input name="iterations" type="number" min="1" step="1" required>
+              </label>
+              <label class="mcts-root-policy">
+                Final move selection
+                <select name="root_policy">
+                  <option value="visits">Most visits (N)</option>
+                  <option value="mean">Highest mean reward (W/N)</option>
+                </select>
               </label>
               <button class="mini-pill" type="submit">Apply MCTS settings</button>
             </form>
@@ -2118,7 +2130,7 @@
     /* =========================================================================
        5. APPLICATION STATE & UI CONTROLLER
        ========================================================================= */
-    const defaultMctsOptions = { exploration: 0.65, iterations: 300 };
+    const defaultMctsOptions = { exploration: 0.65, iterations: 300, root_policy: 'visits' };
     const state = {
       mode: 'human-ai',     // 'human-ai' | 'ai-ai'
       humanSide: X,         // X or O (only used in human-ai)
@@ -2201,8 +2213,10 @@
       const form = mctsTemplate.content.firstElementChild.cloneNode(true);
       const exploration = form.elements.namedItem('exploration');
       const iterations = form.elements.namedItem('iterations');
+      const rootPolicy = form.elements.namedItem('root_policy');
       exploration.value = state.mctsOptions[seat].exploration;
       iterations.value = state.mctsOptions[seat].iterations;
+      rootPolicy.value = state.mctsOptions[seat].root_policy;
 
       iterations.addEventListener('input', () => iterations.setCustomValidity(''));
       form.addEventListener('submit', event => {
@@ -2214,7 +2228,8 @@
         }
         state.mctsOptions[seat] = {
           exploration: exploration.valueAsNumber,
-          iterations: iterations.valueAsNumber
+          iterations: iterations.valueAsNumber,
+          root_policy: rootPolicy.value
         };
         renderAvatarsAndCards();
       });
@@ -2396,7 +2411,8 @@
         if (algo === 'alpha-beta') return `Alpha-Beta (d=${depth})`;
         if (algo === 'minimax') return `MiniMax (d=${depth})`;
         if (algo === 'mcts') {
-          return `MCTS (C=${mctsOptions.exploration}, I=${mctsOptions.iterations})`;
+          const policyLabel = mctsOptions.root_policy === 'visits' ? 'N' : 'W/N';
+          return `MCTS (C=${mctsOptions.exploration}, I=${mctsOptions.iterations}, ${policyLabel})`;
         }
         return 'RandomBot';
       }
@@ -2562,21 +2578,16 @@
 
     function getPlayerConfig(player) {
       const isX = player === X;
-      if (state.mode === 'ai-ai') {
-        const algorithm = isX ? state.botXAlgo : state.botOAlgo;
-        const depth = isX ? state.botXDepth : state.botODepth;
-        const config = algorithm === 'mcts'
-          ? { iterations: 300, max_candidates: 10, rollout_depth: 4 }
-          : ['alpha-beta', 'minimax'].includes(algorithm)
-            ? { depth, max_candidates: 20, candidate_radius: 2 } : {};
-        return { agent: algorithm, config };
-      }
-      if (player === state.humanSide) return { agent: 'Human', config: {} };
-      const config = state.algorithm === 'mcts'
-        ? { iterations: 300, max_candidates: 10, rollout_depth: 4 }
-        : ['alpha-beta', 'minimax'].includes(state.algorithm)
-          ? { depth: state.depth, max_candidates: 20, candidate_radius: 2 } : {};
-      return { agent: state.algorithm, config };
+      const isBotMatch = state.mode === 'ai-ai';
+      if (!isBotMatch && player === state.humanSide) return { agent: 'Human', config: {} };
+      const seat = isBotMatch ? (isX ? 'x' : 'o') : 'human';
+      const algorithm = isBotMatch ? (isX ? state.botXAlgo : state.botOAlgo) : state.algorithm;
+      const depth = isBotMatch ? (isX ? state.botXDepth : state.botODepth) : state.depth;
+      const config = algorithm === 'mcts'
+        ? { ...state.mctsOptions[seat], max_candidates: 10, rollout_depth: 4 }
+        : ['alpha-beta', 'minimax'].includes(algorithm)
+          ? { depth, max_candidates: 20, candidate_radius: 2 } : {};
+      return { agent: algorithm, config };
     }
 
     function saveCompletedGame() {
@@ -2693,15 +2704,10 @@
         if (mySession !== state.sessionId || state.gameOver) return;
 
         const player = state.turn;
-        const isBotMatch = state.mode === 'ai-ai';
-        const seat = isBotMatch ? (player === X ? 'x' : 'o') : 'human';
-        const algo = isBotMatch ? (player === X ? state.botXAlgo : state.botOAlgo) : state.algorithm;
-        const depth = isBotMatch ? (player === X ? state.botXDepth : state.botODepth) : state.depth;
-        const options = algo === 'mcts' ? state.mctsOptions[seat] : { depth, max_candidates: 20 };
-
+        let moveAgent = getPlayerConfig(player);
+        const { agent: algo, config: options } = moveAgent;
         let move = null;
         let moveStats = null;
-        let moveAgent = getPlayerConfig(player);
         try {
           const pyPlayer = (player === X) ? 1 : -1;
           const pyBoard = state.board.map(row => row.map(cell => (cell === O ? -1 : cell)));
